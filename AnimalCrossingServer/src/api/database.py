@@ -7,7 +7,7 @@ from .config import settings
 from .features.amiibo.domain import AmiiboBase
 from .features.characters.domain import CharacterBase
 
-engine = create_engine(settings.connectionstring, echo=True)
+engine = create_engine(str(settings.sqlalchemy_database_uri), echo=True)
 
 # NOTE: this has to go later: we don't just want to create
 #    the whole database every time we start the application

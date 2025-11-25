@@ -13,6 +13,8 @@ coilCompose = "3.3.0"
 coilNetworkOkhttp = "3.3.0"
 orgJetbrainsKotlinPluginSerializationGradlePlugin = "2.2.0"
 kotlinxSerializationJson = "1.9.0"
+preferenceKtx = "1.2.1"
+fragmentCompose = "1.8.9"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -34,6 +36,8 @@ coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref 
 coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coilNetworkOkhttp" }
 org-jetbrains-kotlin-plugin-serialization-gradle-plugin = { group = "org.jetbrains.kotlin.plugin.serialization", name = "org.jetbrains.kotlin.plugin.serialization.gradle.plugin", version.ref = "orgJetbrainsKotlinPluginSerializationGradlePlugin" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+androidx-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "preferenceKtx" }
+androidx-fragment-compose = { group = "androidx.fragment", name = "fragment-compose", version.ref = "fragmentCompose" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

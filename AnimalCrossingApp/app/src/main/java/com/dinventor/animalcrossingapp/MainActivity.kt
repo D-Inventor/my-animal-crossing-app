@@ -1,6 +1,7 @@
 package com.dinventor.animalcrossingapp
 
 import android.content.Intent
+import android.net.InetAddresses
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.preference.PreferenceManager
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.StringRequest
@@ -33,6 +35,7 @@ import com.dinventor.animalcrossingapp.amiibo.GetCharacterByAmiiboIDResponse
 import com.dinventor.animalcrossingapp.ui.theme.AnimalCrossingAppTheme
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import java.net.InetSocketAddress
 
 class MainActivity : ComponentActivity() {
 
@@ -57,7 +60,21 @@ class MainActivity : ComponentActivity() {
             val viewModel: MainActivityStateViewModel by viewModels()
             viewModel.beginAmiiboLookup(id)
 
-            val url = "http://192.168.0.109:8000/api/characters?amiibo_id=${id.take(8)}"
+            val preferences = PreferenceManager.getDefaultSharedPreferences(this)
+            val domain =
+                preferences.getString("serverDomain", null)
+                    ?: throw IllegalStateException("Server address not defined")
+
+            if (!InetAddresses.isNumericAddress(domain)){
+                throw IllegalStateException("server address is not an IP address")
+            }
+
+            val port =
+                preferences.getInt("serverPort", 0)
+
+            val socketAddress = InetSocketAddress(InetAddresses.parseNumericAddress(domain), port)
+
+            val url = "http://$socketAddress/api/characters?amiibo_id=${id.take(8)}"
 
             val request = StringRequest(Request.Method.GET, url, { response ->
                 try {
@@ -117,15 +134,15 @@ fun AmiiboScanner(
     ) {
 
         when (state.amiiboState) {
-            is NothingAmiiboState -> WaitForAmiibo(state.amiiboState)
-            is LookupStartedAmiiboState -> WaitForAmiiboLookup(state.amiiboState)
+            is NothingAmiiboState -> WaitForAmiibo()
+            is LookupStartedAmiiboState -> WaitForAmiiboLookup()
             is FoundAmiiboState -> AmiiboFound(state.amiiboState)
         }
     }
 }
 
 @Composable
-fun WaitForAmiibo(state: NothingAmiiboState) {
+fun WaitForAmiibo() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -139,7 +156,7 @@ fun WaitForAmiibo(state: NothingAmiiboState) {
 }
 
 @Composable
-fun WaitForAmiiboLookup(state: LookupStartedAmiiboState) {
+fun WaitForAmiiboLookup() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)

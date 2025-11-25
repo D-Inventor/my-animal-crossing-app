@@ -45,26 +45,22 @@ class AmiiboReader {
 
         @OptIn(ExperimentalStdlibApi::class)
         fun handleIntent(intent: Intent, callback: (id: String) -> Unit): Boolean {
-            if (NfcAdapter.ACTION_TECH_DISCOVERED != intent.action){
+            if (NfcAdapter.ACTION_TECH_DISCOVERED != intent.action) {
                 return false
             }
 
             val tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG, Tag::class.java)
 
-            MifareUltralight.get(tag)?.let { it ->
-                try {
-                    it.connect()
+            MifareUltralight.get(tag)?.use { it ->
+                it.connect()
 
-                    // according to https://kevinbrewster.github.io/Amiibo-Reverse-Engineering/
-                    // The model information is encoded in page 21, 22 and 23
-                    val bytes = it.readPages(21)
-                    val amiiboIdentifier =
-                        bytes.take(4 * 2).toByteArray().toHexString(HexFormat.Default)
+                // according to https://kevinbrewster.github.io/Amiibo-Reverse-Engineering/
+                // The model information is encoded in page 21, 22 and 23
+                val bytes = it.readPages(21)
+                val amiiboIdentifier =
+                    bytes.take(4 * 2).toByteArray().toHexString(HexFormat.Default)
 
-                    callback(amiiboIdentifier)
-                } finally {
-                    it.close()
-                }
+                callback(amiiboIdentifier)
             }
 
             return true

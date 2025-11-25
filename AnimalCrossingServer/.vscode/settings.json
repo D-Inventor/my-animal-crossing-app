@@ -1,0 +1,15 @@
+{
+    "editor.formatOnSave": true,
+    "[python]": {
+        "diffEditor.ignoreTrimWhitespace": true,
+        "editor.defaultColorDecorators": "never",
+        "editor.formatOnType": false,
+        "editor.wordBasedSuggestions": "off",
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

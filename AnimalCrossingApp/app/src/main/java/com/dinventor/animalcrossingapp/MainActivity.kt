@@ -13,10 +13,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,11 +50,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+
+        val viewModel: MainActivityStateViewModel by viewModels()
+        viewModel.resetAmiiboLookup()
         AmiiboReader.startReading(this)
     }
 
     public override fun onPause() {
         super.onPause()
+
         AmiiboReader.stopReading(this)
     }
 
@@ -65,7 +76,7 @@ class MainActivity : ComponentActivity() {
                 preferences.getString("serverDomain", null)
                     ?: throw IllegalStateException("Server address not defined")
 
-            if (!InetAddresses.isNumericAddress(domain)){
+            if (!InetAddresses.isNumericAddress(domain)) {
                 throw IllegalStateException("server address is not an IP address")
             }
 
@@ -81,9 +92,6 @@ class MainActivity : ComponentActivity() {
                     val decodedResponse =
                         Json.decodeFromString<GetCharacterByAmiiboIDResponse>(response)
 
-                    val viewModel: MainActivityStateViewModel by viewModels()
-                    viewModel.amiiboFound(response)
-
                     val newIntent = Intent(this, CharacterActivity::class.java)
                     newIntent.putExtra("amiibo", decodedResponse)
 
@@ -96,6 +104,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _requestQueue = Volley.newRequestQueue(this)
@@ -107,7 +116,26 @@ class MainActivity : ComponentActivity() {
                 viewModel.uiState.collect { state ->
                     setContent {
                         AnimalCrossingAppTheme {
-                            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                            Scaffold(
+                                topBar = {
+                                    TopAppBar(
+                                        colors = TopAppBarDefaults.topAppBarColors(
+                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            titleContentColor = MaterialTheme.colorScheme.primary,
+                                        ),
+                                        title = {},
+                                        actions = {
+                                            IconButton(onClick = { onNavigateToSettings() }) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Settings,
+                                                    contentDescription = "Settings"
+                                                )
+                                            }
+                                        }
+                                    )
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            ) { innerPadding ->
                                 AmiiboScanner(
                                     state = state,
                                     modifier = Modifier
@@ -120,6 +148,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun onNavigateToSettings() {
+        val intent = Intent(this, AnimalCrossingSettingsActivity::class.java)
+        startActivity(intent)
     }
 }
 
@@ -134,9 +167,8 @@ fun AmiiboScanner(
     ) {
 
         when (state.amiiboState) {
-            is NothingAmiiboState -> WaitForAmiibo()
+            is ScanningAmiiboState -> WaitForAmiibo()
             is LookupStartedAmiiboState -> WaitForAmiiboLookup()
-            is FoundAmiiboState -> AmiiboFound(state.amiiboState)
         }
     }
 }
@@ -169,16 +201,11 @@ fun WaitForAmiiboLookup() {
     }
 }
 
-@Composable
-fun AmiiboFound(state: FoundAmiiboState) {
-    Text(text = "Amiibo found: ${state.payload}")
-}
-
 @Preview(showBackground = true)
 @Composable
 fun AmiiboScannerWaitingPreview() {
     AnimalCrossingAppTheme {
-        AmiiboScanner(MainActivityState(NothingAmiiboState()))
+        AmiiboScanner(MainActivityState(ScanningAmiiboState()))
     }
 }
 
@@ -187,13 +214,5 @@ fun AmiiboScannerWaitingPreview() {
 fun AmiiboScannerLookingUpPreview() {
     AnimalCrossingAppTheme {
         AmiiboScanner(MainActivityState(LookupStartedAmiiboState("12345678")))
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AmiiboScannerFoundPreview() {
-    AnimalCrossingAppTheme {
-        AmiiboScanner(MainActivityState(FoundAmiiboState("{\"name\":\"Rocket\"}")))
     }
 }

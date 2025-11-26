@@ -8,7 +8,9 @@ from pydantic import (
     model_validator,
 )
 from pydantic_core import MultiHostUrl
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DOTENV = os.path.join(os.path.dirname(__file__), ".env")
 
 
 class Settings(BaseSettings):
@@ -18,6 +20,8 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str | None = None
     POSTGRES_PASSWORD_FILE: str | None = None
     POSTGRES_DB: str
+
+    model_config = SettingsConfigDict(env_file=DOTENV)
 
     @model_validator(mode="before")
     @classmethod

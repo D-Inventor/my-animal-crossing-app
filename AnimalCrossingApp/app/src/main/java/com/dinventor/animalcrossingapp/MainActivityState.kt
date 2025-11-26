@@ -10,14 +10,12 @@ data class MainActivityState(val amiiboState: AmiiboState)
 
 interface AmiiboState { }
 
-class NothingAmiiboState : AmiiboState
+class ScanningAmiiboState : AmiiboState
 
 data class LookupStartedAmiiboState(val id: String) : AmiiboState
 
-data class FoundAmiiboState(val payload: String) : AmiiboState
-
 class MainActivityStateViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow(MainActivityState(NothingAmiiboState()))
+    private val _uiState = MutableStateFlow(MainActivityState(ScanningAmiiboState()))
     val uiState: StateFlow<MainActivityState> = _uiState.asStateFlow()
 
     fun beginAmiiboLookup(id: String) {
@@ -26,9 +24,9 @@ class MainActivityStateViewModel : ViewModel() {
         }
     }
 
-    fun amiiboFound(payload: String){
+    fun resetAmiiboLookup() {
         _uiState.update { currentState ->
-            currentState.copy(amiiboState = FoundAmiiboState(payload))
+            currentState.copy(amiiboState = ScanningAmiiboState())
         }
     }
 }

@@ -12,9 +12,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +35,7 @@ import com.dinventor.animalcrossingapp.amiibo.GetCharacterByAmiiboIDResponse
 import com.dinventor.animalcrossingapp.ui.theme.AnimalCrossingAppTheme
 
 class CharacterActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -37,12 +46,32 @@ class CharacterActivity : ComponentActivity() {
 
         setContent {
             AnimalCrossingAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                titleContentColor = MaterialTheme.colorScheme.primary,
+                            ),
+                            title = {
+                                Text(text = "Villager")
+                            },
+                            navigationIcon = {
+                                IconButton(onClick = { finish() }) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "Back"
+                                    )
+                                }
+                            })
+                    },
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
                     CharacterCard(
                         amiiboModel,
                         modifier = Modifier
                             .padding(innerPadding)
-                            .padding(horizontal = 16.dp)
+                            .padding(16.dp)
                     )
                 }
             }
@@ -52,20 +81,23 @@ class CharacterActivity : ComponentActivity() {
 
 @Composable
 fun CharacterCard(data: GetCharacterByAmiiboIDResponse, modifier: Modifier = Modifier) {
-   Card(modifier = modifier) {
-       BoxWithConstraints(modifier = Modifier.padding(16.dp)) {
-           if (maxWidth < 600.dp) {
-               Column(verticalArrangement = Arrangement.spacedBy(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                   CharacterCardContent(data)
-               }
-           }
-           else {
-               Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                   CharacterCardContent(data)
-               }
-           }
-       }
-   }
+    Card(modifier = modifier) {
+        @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
+        BoxWithConstraints(modifier = Modifier.padding(16.dp)) {
+            if (maxWidth < 600.dp) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CharacterCardContent(data)
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    CharacterCardContent(data)
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -76,7 +108,10 @@ fun CharacterCardContent(data: GetCharacterByAmiiboIDResponse) {
         modifier = Modifier.heightIn(max = 240.dp)
     )
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.widthIn(0.dp, 360.dp)) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.widthIn(0.dp, 360.dp)
+    ) {
         Text(text = data.name, fontSize = 8.em, fontWeight = FontWeight.Bold)
 
         Row {
@@ -102,15 +137,17 @@ fun CharacterCardContent(data: GetCharacterByAmiiboIDResponse) {
 @Preview(name = "Card preview", showBackground = true)
 fun CharacterCardPreview() {
     AnimalCrossingAppTheme {
-        CharacterCard(GetCharacterByAmiiboIDResponse(
-            1,
-            "flg01",
-            "Ribbot",
-            "Frog",
-            "Jock",
-            "Male",
-            "Fitness",
-            "https://dodo.ac/np/images/thumb/5/58/Rocket_NH.png/225px-Rocket_NH.png"
-        ))
+        CharacterCard(
+            GetCharacterByAmiiboIDResponse(
+                1,
+                "flg01",
+                "Ribbot",
+                "Frog",
+                "Jock",
+                "Male",
+                "Fitness",
+                "https://dodo.ac/np/images/thumb/5/58/Rocket_NH.png/225px-Rocket_NH.png"
+            )
+        )
     }
 }

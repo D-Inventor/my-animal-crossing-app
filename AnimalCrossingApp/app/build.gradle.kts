@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.preference.ktx)
     implementation(libs.androidx.fragment.compose)
+    implementation(libs.androidx.compose.material.icons.core)
     testImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

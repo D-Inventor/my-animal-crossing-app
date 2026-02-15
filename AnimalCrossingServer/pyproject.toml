@@ -14,6 +14,11 @@ dev = [
     "ruff"
 ]
 
+[project.scripts]
+import-worker = "import_worker.start:main"
+api = "api.start:main"
+automatcher = "automatcher.start:main"
+
 [tool.pytest.ini_options]
 pythonpath = "./src"
 

@@ -5,15 +5,13 @@ requires-python = ">= 3.14"
 dependencies = [
     "fastapi[standard-no-fastapi-cloud-cli]",
     "SQLAlchemy",
-    "psycopg[binary,pool]",
     "pydantic-settings"
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "ruff",
-    "testcontainers[postgres]"
+    "ruff"
 ]
 
 [tool.pytest.ini_options]

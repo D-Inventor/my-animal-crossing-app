@@ -5,14 +5,20 @@ requires-python = ">= 3.14"
 dependencies = [
     "fastapi[standard-no-fastapi-cloud-cli]",
     "SQLAlchemy",
-    "pydantic-settings"
+    "pydantic-settings",
+    "pymysql"
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "ruff"
+    "ruff",
+    "testcontainers"
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
 
 [project.scripts]
 import-worker = "import_worker.start:main"

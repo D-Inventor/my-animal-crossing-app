@@ -1,13 +1,9 @@
-from typing import Dict
-
 from fastapi import FastAPI
 
-from features.example_feature import get_example_payload
+from api.db.config import configure_database
+from api.villagers import router as villagers_router
 
-app = FastAPI(title="AnimalCrossing Example API")
+app = FastAPI(title="Animal Crossing API")
+app.include_router(villagers_router)
 
-
-@app.get("/feature")
-async def feature() -> Dict[str, str]:
-    """Return the example feature payload."""
-    return get_example_payload()
+configure_database(app)

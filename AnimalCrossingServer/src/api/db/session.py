@@ -4,6 +4,8 @@ from fastapi import Request
 from sqlalchemy import URL, Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from api.db.config import DatabaseSettings
+
 
 def _create_engine_for_app(request: Request) -> Engine:
     # Prefer an engine cached on app.state to avoid recreating per request
@@ -11,7 +13,10 @@ def _create_engine_for_app(request: Request) -> Engine:
     if hasattr(app.state, "_engine") and isinstance(app.state._engine, Engine):
         return app.state._engine
 
-    database_url = getattr(app.state, "database_url", None)
+    database_url = (
+        getattr(app.state, "database_url", None)
+        or DatabaseSettings().get_connection_url()
+    )
     if not isinstance(database_url, URL):
         raise RuntimeError("DATABASE_URL not configured on app.state or environment")
 

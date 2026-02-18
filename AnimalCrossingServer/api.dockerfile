@@ -22,4 +22,4 @@ RUN pip install --no-cache-dir -e .
 COPY --chown=appuser:appgroup src/api src/api
 
 USER appuser
-ENTRYPOINT ["api"]
+ENTRYPOINT ["sh", "-c", "api-migrate && exec api"]

@@ -22,12 +22,23 @@ services:
       watch:
         - action: rebuild
           path: src/api
+        - action: rebuild
+          path: pyproject.toml
     secrets:
       - db_user_password
+    depends_on:
+      db:
+        condition: service_healthy
 
   db:
     image: mariadb:12.2.2
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
     expose:
       - "3306"
     ports:

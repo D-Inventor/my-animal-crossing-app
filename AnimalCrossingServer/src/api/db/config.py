@@ -38,8 +38,3 @@ class DatabaseSettings(BaseSettings):
             port=self.port,
             database=self.database,
         )
-
-
-def configure_database(app: FastAPI) -> None:
-    config = DatabaseSettings()
-    app.state.database_url = config.get_connection_url()

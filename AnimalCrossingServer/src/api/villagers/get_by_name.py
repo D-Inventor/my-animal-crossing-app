@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 from pydantic import BaseModel
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.db.session import get_session
 from api.db.villager import Villager
@@ -21,11 +21,11 @@ class VillagerResponse(BaseModel):
 
 
 @router.get("/by-name/{name}", summary="Find all villagers with the given name")
-def endpoint(
-    name: str, db: Annotated[Session, Depends(get_session)]
+async def endpoint(
+    name: str, db: Annotated[AsyncSession, Depends(get_session)]
 ) -> GetVillagerByNameResponse:
     stmt = select(Villager).where(Villager.name == name)
-    villagers = db.execute(stmt).scalars().all()
+    villagers = (await db.scalars(stmt)).all()
     return GetVillagerByNameResponse(
         data=[VillagerResponse(id=v.id, name=v.name) for v in villagers]
     )

@@ -1,4 +1,3 @@
-from fastapi import FastAPI
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import URL
@@ -31,7 +30,7 @@ class DatabaseSettings(BaseSettings):
 
     def get_connection_url(self) -> URL:
         return URL.create(
-            drivername="mysql+pymysql",
+            drivername="mysql+aiomysql",
             username=self.username,
             password=self.get_password(),
             host=self.host,

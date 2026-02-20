@@ -1,65 +1,87 @@
 """Pytest configuration and shared fixtures."""
 
 from pathlib import Path
-from typing import Generator, Tuple
+from typing import AsyncGenerator, Tuple
 
 import pytest
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Connection
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    async_sessionmaker,
+    create_async_engine,
+)
 from testcontainers.mysql import MySqlContainer
 
 from api.db import Base
 
 
-def _setup_mariadb_container() -> Generator[
-    Tuple[sessionmaker, str, object], None, None
+async def _setup_mariadb_container_async() -> AsyncGenerator[
+    Tuple[async_sessionmaker, str, AsyncEngine], None
 ]:
-    """Set up MariaDB container with engine and sessionmaker.
+    """Set up MariaDB container with async engine and sessionmaker.
 
     Yields:
         (sessionmaker, connection_url, engine): A tuple containing the sessionmaker,
-        connection URL, and engine for the container DB.
+        connection URL, and async engine for the container DB.
     """
     with MySqlContainer("mariadb:10.11") as mysql:
         connection_url = mysql.get_connection_url().replace(
-            "mysql://", "mysql+pymysql://"
+            "mysql://", "mysql+aiomysql://"
         )
-        engine = create_engine(connection_url, echo=False)
-        session_local = sessionmaker(bind=engine, expire_on_commit=False)
+        engine = create_async_engine(connection_url, echo=False)
+        session_local = async_sessionmaker(bind=engine, expire_on_commit=False)
         yield session_local, connection_url, engine
+        await engine.dispose()
 
 
 @pytest.fixture
-def mariadb_session() -> Generator[Tuple[sessionmaker, str], None, None]:
-    """Start a MariaDB container.
+async def mariadb_session() -> AsyncGenerator[Tuple[async_sessionmaker, str], None]:
+    """Start a MariaDB container with async session support.
 
     Yields:
-        (sessionmaker, connection_url): A tuple containing a sessionmaker
+        (sessionmaker, connection_url): A tuple containing an async sessionmaker
         for the container DB and the connection URL.
     """
-    for session_local, connection_url, engine in _setup_mariadb_container():
-        Base.metadata.create_all(engine)
+    async for (
+        session_local,
+        connection_url,
+        _engine,
+    ) in _setup_mariadb_container_async():
+        # Create all tables using async context
+        async with _engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
         yield session_local, connection_url
+        break
+
+
+def run_migrations(connection: Connection, cfg: Config) -> None:
+    cfg.attributes["connection"] = connection
+    command.upgrade(cfg, "head")
 
 
 @pytest.fixture
-def mariadb_with_migrations() -> Generator[sessionmaker, None, None]:
+async def mariadb_with_migrations() -> AsyncGenerator[async_sessionmaker, None]:
     """Start a MariaDB container with alembic migrations applied.
 
     Yields:
-        sessionmaker: A sessionmaker for the container DB.
+        sessionmaker: An async sessionmaker for the container DB.
     """
-    for session_local, connection_url, engine in _setup_mariadb_container():
+    async for (
+        session_local,
+        connection_url,
+        engine,
+    ) in _setup_mariadb_container_async():
         # Configure and run alembic migrations
+        # Convert async URL to sync for alembic (alembic uses sync connections)
         alembic_cfg = Config()
         alembic_cfg.set_main_option("sqlalchemy.url", connection_url)
         # Point to the alembic migrations directory
         alembic_dir = Path(__file__).parent.parent / "src" / "api" / "alembic"
         alembic_cfg.set_main_option("script_location", str(alembic_dir))
 
-        # Run migrations
-        command.upgrade(alembic_cfg, "head")
+        async with engine.begin() as conn:
+            await conn.run_sync(run_migrations, alembic_cfg)
 
         yield session_local

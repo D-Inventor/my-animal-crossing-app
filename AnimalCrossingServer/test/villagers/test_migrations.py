@@ -1,13 +1,16 @@
 import uuid
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from api.db import Villager
 
 
-@pytest.mark.asyncio(loop_scope="function")
-@pytest.mark.database
-async def test_should_persist_villager_with_alembic_migrations(mariadb_with_migrations):
+@pytest.mark.asyncio
+@pytest.mark.slow
+async def test_should_persist_villager_with_alembic_migrations(
+    mariadb_with_migrations: async_sessionmaker[AsyncSession],
+):
     """Test that a villager persists using alembic-created schema.
 
     Given: a MariaDB container with schema created via alembic migrations
@@ -15,17 +18,16 @@ async def test_should_persist_villager_with_alembic_migrations(mariadb_with_migr
     Then: we can retrieve it from the DB with correct data
     """
     # Given: a MariaDB container with alembic migrations applied
-    session_local = mariadb_with_migrations
 
     # When: we save a Villager instance
     villager_id = f"villager-{uuid.uuid4()}"
-    async with session_local() as session:
+    async with mariadb_with_migrations() as session:
         session.add(Villager(id=villager_id, name="Sherb"))
         await session.commit()
 
     # Then: we can retrieve the same villager from the DB
-    async with session_local() as session:
-        got = await session.get(Villager, villager_id)
-        assert got is not None
-        assert got.id == villager_id
-        assert got.name == "Sherb"
+    async with mariadb_with_migrations() as session:
+        result = await session.get(Villager, villager_id)
+        assert result is not None
+        assert result.id == villager_id
+        assert result.name == "Sherb"

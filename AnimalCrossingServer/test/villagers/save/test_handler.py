@@ -41,7 +41,7 @@ class InMemoryVillagerRepository:
         self._fetched_villagers = {}
 
 
-@pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_should_create_new_villager():
     # given
     repository = InMemoryVillagerRepository()
@@ -54,7 +54,7 @@ async def test_should_create_new_villager():
     assert isinstance(await repository.get("flg01"), Villager)
 
 
-@pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.asyncio
 async def test_should_update_existing_villager():
     # given
     repository = InMemoryVillagerRepository()

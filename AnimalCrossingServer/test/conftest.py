@@ -9,6 +9,7 @@ from alembic.config import Config
 from sqlalchemy import URL, Connection, NullPool, make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
+    AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
@@ -31,7 +32,7 @@ async def _setup_mariadb_container_async() -> AsyncGenerator[
 
 
 @pytest.fixture
-async def mariadb_session() -> AsyncGenerator[Tuple[async_sessionmaker, str], None]:
+async def mariadb_session() -> AsyncGenerator[async_sessionmaker[AsyncSession], None]:
     async for (
         session_local,
         _,

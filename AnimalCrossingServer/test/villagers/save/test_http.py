@@ -9,15 +9,13 @@ from api.app import app
 from api.db.villager import Villager
 
 
-@pytest.mark.asyncio(loop_scope="function")
-@pytest.mark.httptest
-@pytest.mark.database
+@pytest.mark.asyncio
+@pytest.mark.slow
 async def test_should_create_new_villager(
-    mariadb_session: Tuple[async_sessionmaker[AsyncSession], str],
+    mariadb_session: async_sessionmaker[AsyncSession],
 ):
     # Given
-    session_local = mariadb_session
-    app.state._session_local = session_local
+    app.state._session_local = mariadb_session
 
     # When
     async with AsyncClient(
@@ -26,7 +24,7 @@ async def test_should_create_new_villager(
         await client.put("/villagers/flg01", json={"name": "Ribbot"})
 
     # Then
-    async with session_local() as session:
+    async with mariadb_session() as session:
         stmt = select(Villager)
         result = (await session.scalars(stmt)).one()
         assert result.name == "Ribbot"

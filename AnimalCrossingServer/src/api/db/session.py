@@ -1,6 +1,6 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Protocol
 
-from fastapi import Request
+from fastapi import FastAPI, Request
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -12,9 +12,15 @@ from sqlalchemy.ext.asyncio import (
 from api.db.config import DatabaseSettings
 
 
+class DatabaseState(Protocol):
+    _engine: AsyncEngine | None
+    _session_local: async_sessionmaker[AsyncSession] | None
+    database_url: URL | None
+
+
 def _create_engine_for_app(request: Request) -> AsyncEngine:
     # Prefer an engine cached on app.state to avoid recreating per request
-    app = request.app
+    app: FastAPI = request.app
     if hasattr(app.state, "_engine") and isinstance(app.state._engine, AsyncEngine):
         return app.state._engine
 
@@ -30,15 +36,17 @@ def _create_engine_for_app(request: Request) -> AsyncEngine:
     return engine
 
 
-def _create_session_for_app(request: Request) -> async_sessionmaker:
-    app = request.app
+def _create_session_for_app(request: Request) -> async_sessionmaker[AsyncSession]:
+    app: FastAPI = request.app
     if hasattr(app.state, "_session_local") and isinstance(
         app.state._session_local, async_sessionmaker
     ):
         return app.state._session_local
 
     engine = _create_engine_for_app(request)
-    session_local = async_sessionmaker(bind=engine, expire_on_commit=False)
+    session_local = async_sessionmaker[AsyncSession](
+        bind=engine, expire_on_commit=False
+    )
     app.state._session_local = session_local
     return session_local
 

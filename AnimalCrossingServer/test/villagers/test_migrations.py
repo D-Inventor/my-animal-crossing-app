@@ -5,7 +5,8 @@ import pytest
 from api.db import Villager
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio(loop_scope="function")
+@pytest.mark.database
 async def test_should_persist_villager_with_alembic_migrations(mariadb_with_migrations):
     """Test that a villager persists using alembic-created schema.
 

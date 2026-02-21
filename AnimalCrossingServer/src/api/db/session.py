@@ -18,9 +18,9 @@ class DatabaseState(Protocol):
     database_url: URL | None
 
 
-def _create_engine_for_app(request: Request) -> AsyncEngine:
-    # Prefer an engine cached on app.state to avoid recreating per request
-    app: FastAPI = request.app
+def get_engine_for_app(app: FastAPI) -> AsyncEngine:
+    # The app will use a single engine instance for it's entire lifetime.
+    # It is stored on the app.state so that we can overwrite it in tests
     if hasattr(app.state, "_engine") and isinstance(app.state._engine, AsyncEngine):
         return app.state._engine
 
@@ -36,14 +36,13 @@ def _create_engine_for_app(request: Request) -> AsyncEngine:
     return engine
 
 
-def _create_session_for_app(request: Request) -> async_sessionmaker[AsyncSession]:
-    app: FastAPI = request.app
+def get_sessionmaker_for_app(app: FastAPI) -> async_sessionmaker[AsyncSession]:
     if hasattr(app.state, "_session_local") and isinstance(
         app.state._session_local, async_sessionmaker
     ):
         return app.state._session_local
 
-    engine = _create_engine_for_app(request)
+    engine = get_engine_for_app(app)
     session_local = async_sessionmaker[AsyncSession](
         bind=engine, expire_on_commit=False
     )
@@ -52,7 +51,7 @@ def _create_session_for_app(request: Request) -> async_sessionmaker[AsyncSession
 
 
 async def get_session(request: Request) -> AsyncGenerator[AsyncSession, None]:
-    session_local = _create_session_for_app(request)
+    session_local = get_sessionmaker_for_app(request.app)
     session = session_local()
     try:
         yield session

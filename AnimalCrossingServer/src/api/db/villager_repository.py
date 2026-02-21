@@ -10,6 +10,7 @@ from api.db.villager import Villager
 class VillagerRepository(Protocol):
     async def get(self, id: str) -> Villager | None: ...
     async def update(self, villager: Villager) -> None: ...
+    async def delete(self, villager: Villager) -> None: ...
     async def save(self) -> None: ...
 
 
@@ -22,6 +23,10 @@ class SessionVillagerRepository:
 
     async def update(self, villager: Villager) -> None:
         self._session.add(villager)
+
+    async def delete(self, villager: Villager) -> None:
+        if villager in self._session:
+            await self._session.delete(villager)
 
     async def save(self) -> None:
         await self._session.commit()

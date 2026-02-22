@@ -13,7 +13,8 @@ dependencies = [
     "opentelemetry-sdk",
     "opentelemetry-instrumentation-asyncio",
     "opentelemetry-instrumentation-fastapi",
-    "opentelemetry-instrumentation-sqlalchemy"
+    "opentelemetry-instrumentation-sqlalchemy",
+    "opentelemetry-exporter-otlp-proto-grpc"
 ]
 
 [project.optional-dependencies]

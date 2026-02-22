@@ -1,9 +1,12 @@
 from fastapi import FastAPI
-from opentelemetry import trace
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.asyncio import AsyncioInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
@@ -20,13 +23,21 @@ class TelemetryConfig(BaseSettings):
     enabled: bool = Field(False)
     exporter_endpoint: str | None = Field(None)
 
-    def get_exporter(self) -> OTLPSpanExporter:
+    def get_trace_exporter(self) -> OTLPSpanExporter:
         if self.exporter_endpoint is None:
             raise ValueError(
                 "TELEMETRY_EXPORTER_ENDPOINT must be set when telemetry is enabled."
             )
 
         return OTLPSpanExporter(endpoint=self.exporter_endpoint)
+
+    def get_metric_exporter(self) -> OTLPMetricExporter:
+        if self.exporter_endpoint is None:
+            raise ValueError(
+                "TELEMETRY_EXPORTER_ENDPOINT must be set when telemetry is enabled."
+            )
+
+        return OTLPMetricExporter(endpoint=self.exporter_endpoint)
 
 
 def configure_telemetry(app: FastAPI) -> None:
@@ -36,10 +47,15 @@ def configure_telemetry(app: FastAPI) -> None:
         return
 
     resource = Resource.create({SERVICE_NAME: "animal-crossing-api"})
-    provider = TracerProvider(resource=resource)
-    processor = BatchSpanProcessor(config.get_exporter())
-    provider.add_span_processor(processor)
-    trace.set_tracer_provider(provider)
+
+    trace_provider = TracerProvider(resource=resource)
+    trace_processor = BatchSpanProcessor(config.get_trace_exporter())
+    trace_provider.add_span_processor(trace_processor)
+    trace.set_tracer_provider(trace_provider)
+
+    metric_reader = PeriodicExportingMetricReader(config.get_metric_exporter())
+    metric_provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
+    metrics.set_meter_provider(metric_provider)
 
     FastAPIInstrumentor.instrument_app(app)
     AsyncioInstrumentor().instrument()

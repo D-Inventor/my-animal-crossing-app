@@ -1,69 +1,40 @@
 # AnimalCrossingServer — example starters
+The animal crossing server stores information about Animal Crossing Villagers and connects them with information about Amiibo's.
+It exposes an API that will eventually be used by the app to request and present the information.
 
-This workspace contains three small example entrypoints and a shared `features`
-package. Each project has a console entry point configured in `pyproject.toml`.
+## Running the project
+The following software is needed to run the project:
+ - Docker
+ - Python 3.14+
 
-Prerequisites
+| ℹ️ Recommendation: |
+|---|
+| Use a virtual environment with python so your dependencies are isolated |
 
-- Python 3.10+ recommended
-- Install the package in editable mode:
+### Installing the dependencies
+Install all dependencies by running the following command:
 
-```powershell
-pip install -e .
+```bash
+pip install -e .[dev]
 ```
 
-- Install runtime deps for the API if needed:
+### Running the project
+The project must run in docker. The docker-compose file sets up all dependencies and necessary environment.
+Before composing the services, you need to create secret files. The secret files go into a secrets folder like this:
 
-```powershell
-pip install fastapi uvicorn
+- 📄 /docker-compose.api.yaml
+- 📁 /secrets
+  - 📄 /db_root_password.txt
+  - 📄 /db_user_password.txt
+
+The secret files should contain randomly generated passwords. There is no specific requirements for the passwords.
+Then run the project by calling the following command:
+
+```bash
+docker compose -f docker-compose.api.yaml up --build --watch
 ```
 
-Start the import worker
+The service is now available on **http://localhost:8000**
 
-```powershell
-import-worker
-```
-
-Expected output: prints a timestamp and the message from the shared feature
-("features: example feature active").
-
-Start the API (FastAPI)
-
-```powershell
-api
-```
-
-Then test the example endpoint:
-
-```powershell
-curl http://127.0.0.1:8000/feature
-```
-
-Expected result: JSON payload from the shared feature, for example:
-
-```json
-{"message": "features: example feature active"}
-```
-
-Start the automatcher
-
-```powershell
-automatcher
-```
-
-Expected output: a short sequence of fake events printed and match results,
-each including the shared feature payload.
-
-Notes
-
-- The package-local start modules are:
-  - `src/import_worker/start.py` → `import-worker` command
-  - `src/api/start.py` → `api` command
-  - `src/automatcher/start.py` → `automatcher` command
-
-- Console entry points are configured in `pyproject.toml`. After installing the
-  package with `pip install -e .`, you can run each project as a command from
-  anywhere in your shell.
-
-- These example entrypoints are intentionally simple; replace the bodies with
-  your real scheduling, queue consumption, and API logic as needed.
+### Debugging
+This project is built with Test Driven Development and debugging is done accordingly. Find a test that demonstrates the bug. Run the test in debug mode if you need to step through.

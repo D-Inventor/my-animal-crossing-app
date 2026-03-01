@@ -1,6 +1,6 @@
-from dataclasses import dataclass
 from typing import Self, TypedDict, Unpack
 
+from pydantic import BaseModel
 from sqlalchemy import String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -14,8 +14,8 @@ class VillagerType(TypedDict):
     name: str
 
 
-@dataclass
-class VillagerCreated:
+class VillagerCreated(BaseModel):
+    type: str = "VillagerCreated"
     id: str
 
 
@@ -28,7 +28,7 @@ class Villager(Base):
     @classmethod
     def create(cls, **kwargs: Unpack[VillagerType]) -> Self:
         result = Villager(**kwargs)
-        result._events.append(VillagerCreated(result.id))
+        result._events.append(VillagerCreated(id=result.id))
         return result
 
     # Note: maybe overkill for now, but a list is easier to deal with

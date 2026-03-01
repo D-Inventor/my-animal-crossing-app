@@ -18,7 +18,7 @@ def main() -> None:
     )
 
     alembic_cfg.set_main_option(
-        "script_location", str(Path(__file__).parent / "alembic")
+        "script_location", str(Path(__file__).parent / "db" / "alembic")
     )
 
     command.upgrade(alembic_cfg, "head")

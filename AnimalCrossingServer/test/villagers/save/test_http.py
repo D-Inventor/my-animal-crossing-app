@@ -3,7 +3,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from api.app import app
+from api.app import create_app
 from api.db.villager import Villager
 
 
@@ -13,6 +13,7 @@ async def test_should_create_new_villager(
     mariadb_session: async_sessionmaker[AsyncSession],
 ):
     # Given
+    app = create_app()
     app.state._session_local = mariadb_session
 
     # When

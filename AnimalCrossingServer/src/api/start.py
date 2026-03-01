@@ -1,19 +1,17 @@
-"""Workspace-local start module for the API (FastAPI).
-
-This module lives inside the `api` package so editors and tooling can find
-it.
-"""
-
+from api.messagebus.config import configure_messagebus
 from api.telemetry.config import configure_telemetry
 
-from .app import app
+from .app import create_app
 
 
 def main() -> None:
     try:
         import uvicorn
 
+        app = create_app()
+
         configure_telemetry(app)
+        configure_messagebus(app)
 
         uvicorn.run(app, host="0.0.0.0", port=8000)
     except Exception as e:

@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 
 from api.db.unit_of_work import UnitOfWork, get_unit_of_work
-from api.db.villager_repository import VillagerRepository, get_repository
+from api.villagers.repository import VillagerRepository, get_repository
 
 from .router import router
 

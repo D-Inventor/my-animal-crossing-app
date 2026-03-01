@@ -1,9 +1,8 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from api.db.unit_of_work import SessionUnitOfWork
 from api.db.villager import Villager
-from api.db.villager_repository import SessionVillagerRepository
+from api.villagers.repository import SessionVillagerRepository
 
 
 @pytest.mark.asyncio

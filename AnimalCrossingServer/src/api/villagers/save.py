@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 from pydantic import BaseModel
 
+from api.db.unit_of_work import UnitOfWork, get_unit_of_work
 from api.db.villager import Villager
 from api.db.villager_repository import VillagerRepository, get_repository
 
@@ -17,6 +18,7 @@ class SaveVillagerRequest(BaseModel):
 async def endpoint(
     villager_id: str,
     request: SaveVillagerRequest,
+    unit_of_work: Annotated[UnitOfWork, Depends(get_unit_of_work)],
     repository: Annotated[VillagerRepository, Depends(get_repository)],
 ) -> None:
     villager = await repository.get(villager_id)
@@ -24,7 +26,7 @@ async def endpoint(
         create(villager_id, request) if villager is None else update(villager, request)
     )
     await repository.update(villager)
-    await repository.save()
+    await unit_of_work.save()
 
 
 def create(id: str, request: SaveVillagerRequest) -> Villager:

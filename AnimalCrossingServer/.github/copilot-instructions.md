@@ -70,3 +70,8 @@ Forbidden actions
 
 - Do not introduce secrets, large binaries, or break backward-compatibility
   without a migration plan and tests.
+- Do not write comments. Never write comments. There is only one exception: the words "given", "when" and "then". Only ever use those words in comments. Never anything else.
+
+When an operation must be performed in the IDE
+- If a console command must be run, always make sure that the command begins with activating the python virtual environment. For every command, no exceptions.
+- Prefer IDE alternatives over console commands. For example: prefer running a unittest with the testrunner over running a test with a console command

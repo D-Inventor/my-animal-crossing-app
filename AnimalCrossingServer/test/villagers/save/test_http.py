@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select

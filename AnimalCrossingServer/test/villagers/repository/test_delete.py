@@ -20,7 +20,7 @@ async def test_should_delete_villager(
         repository = SessionVillagerRepository(session)
         villager = await repository.get("flg01")
         await repository.delete(villager)
-        await repository.save()
+        await session.commit()
 
     # then
     async with mariadb_session() as session:
@@ -40,7 +40,7 @@ async def test_should_do_nothing_when_delete_nonexistent_villager(
         repository = SessionVillagerRepository(session)
         non_existent_villager = Villager(id="flg01", name="Ribbot")
         await repository.delete(non_existent_villager)
-        await repository.save()
+        await session.commit()
 
     # then: no error and DB is still empty
     async with mariadb_session() as session:

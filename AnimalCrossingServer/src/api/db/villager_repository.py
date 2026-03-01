@@ -11,7 +11,6 @@ class VillagerRepository(Protocol):
     async def get(self, id: str) -> Villager | None: ...
     async def update(self, villager: Villager) -> None: ...
     async def delete(self, villager: Villager) -> None: ...
-    async def save(self) -> None: ...
 
 
 class SessionVillagerRepository:
@@ -27,9 +26,6 @@ class SessionVillagerRepository:
     async def delete(self, villager: Villager) -> None:
         if villager in self._session:
             await self._session.delete(villager)
-
-    async def save(self) -> None:
-        await self._session.commit()
 
 
 def get_repository(

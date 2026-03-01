@@ -3,16 +3,20 @@ import pytest
 from api.db.villager import Villager
 from api.villagers.save import SaveVillagerRequest, endpoint
 from test.villagers.in_memory_repository import InMemoryVillagerRepository
+from test.villagers.in_memory_unit_of_work import InMemoryUnitOfWork
 
 
 @pytest.mark.asyncio
 async def test_should_create_new_villager():
     # given
     repository = InMemoryVillagerRepository()
+    unit_of_work = InMemoryUnitOfWork([repository])
 
     # when
-    await endpoint("flg01", SaveVillagerRequest(name="Ribbot"), repository)
-    repository.flush()
+    await endpoint(
+        "flg01", SaveVillagerRequest(name="Ribbot"), unit_of_work, repository
+    )
+    unit_of_work.flush()
 
     # then
     assert isinstance(await repository.get("flg01"), Villager)
@@ -22,11 +26,16 @@ async def test_should_create_new_villager():
 async def test_should_update_existing_villager():
     # given
     repository = InMemoryVillagerRepository()
-    await endpoint("flg01", SaveVillagerRequest(name="Ribbot"), repository)
-    repository.flush()
+    unit_of_work = InMemoryUnitOfWork([repository])
+    await endpoint(
+        "flg01", SaveVillagerRequest(name="Ribbot"), unit_of_work, repository
+    )
+    unit_of_work.flush()
 
     # when
-    await endpoint("flg01", SaveVillagerRequest(name="Ribbot 2.0"), repository)
+    await endpoint(
+        "flg01", SaveVillagerRequest(name="Ribbot 2.0"), unit_of_work, repository
+    )
 
     # then
     result = await repository.get("flg01")

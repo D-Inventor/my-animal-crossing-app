@@ -1,6 +1,23 @@
 import copy
+from typing import Protocol
 
 from api.db.villager import Villager
+
+
+class TestRepositoryProtocol(Protocol):
+    """
+    An in-memory test-repository needs to receive these signals from a test-unit-of-work:
+
+    **save**: Save is called to simulate a commit on
+        the unit-of-work where all the changes are "persisted"
+
+    **flush**: Flush is called to simulate the disposal of
+       the unit-of-work to simulate "end of operation".
+       Only persisted changes are saved and everything else is discarded
+    """
+
+    def save(self) -> None: ...
+    def flush(self) -> None: ...
 
 
 class InMemoryVillagerRepository:
@@ -36,7 +53,7 @@ class InMemoryVillagerRepository:
             raise ValueError("Cannot delete a villager that was not fetched")
         self._deleted_villagers.add(villager.id)
 
-    async def save(self) -> None:
+    def save(self) -> None:
         for id, villager in self._fetched_villagers.items():
             self._persisted_villagers[id] = copy.deepcopy(villager)
 

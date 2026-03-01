@@ -7,6 +7,7 @@ dependencies = [
     "SQLAlchemy[asyncio]",
     "pydantic-settings",
     "pymysql",
+    "aiokafka",
     "aiomysql",
     "alembic",
     "opentelemetry-api",

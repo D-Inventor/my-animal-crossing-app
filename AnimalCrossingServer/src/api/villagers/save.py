@@ -28,7 +28,7 @@ async def endpoint(
 
 
 def create(id: str, request: SaveVillagerRequest) -> Villager:
-    return Villager(id=id, name=request.name)
+    return Villager.create(id=id, name=request.name)
 
 
 def update(villager: Villager, request: SaveVillagerRequest) -> Villager:

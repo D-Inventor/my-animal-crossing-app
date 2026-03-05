@@ -5,10 +5,9 @@ from aiokafka import AIOKafkaProducer
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
-from api.db.event_handler import get_event_handler_collection_from_app
-from api.db.session import set_engine
+from api.db.event_handler import get_event_handler_collection
+from api.db.lifespan import set_engine
 from api.messagebus.event_publisher import EventPublisher
-from api.messagebus.producer import set_kafka
 from api.villagers import router as villagers_router
 
 
@@ -47,9 +46,8 @@ class AppBuilder:
         @asynccontextmanager
         async def add_publisher_and_subscribe(app: FastAPI) -> AsyncGenerator:
             async with value() as kafka_producer:
-                set_kafka(app, kafka_producer)
                 publisher = EventPublisher(kafka_producer)
-                event_handler = get_event_handler_collection_from_app(app)
+                event_handler = get_event_handler_collection(app)
                 event_handler.subscribe(publisher.publish)
                 yield
 

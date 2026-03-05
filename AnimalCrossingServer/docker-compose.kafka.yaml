@@ -7,6 +7,11 @@ services:
       - 9093
     ports:
       - "9092:9092"
+    healthcheck:
+      test: kafka-topics --bootstrap-server kafka:9092 --list
+      interval: 30s
+      timeout: 10s
+      retries: 3
     environment:
       KAFKA_KRAFT_MODE: 'true'
       
@@ -22,6 +27,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      KAFKA_LOG4J_ROOT_LOGLEVEL: WARN
 
       KAFKA_HEAP_OPTS: "-Xmx512M -Xms256M"
       KAFKA_NUM_NETWORK_THREADS: 1

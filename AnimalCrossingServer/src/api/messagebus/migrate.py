@@ -1,4 +1,8 @@
+import asyncio
+
 from aiokafka.admin import AIOKafkaAdminClient, NewTopic
+
+from api.messagebus.config import KafkaSettings
 
 
 async def install_topics(bootstrap_servers: str) -> None:
@@ -11,3 +15,7 @@ async def install_topics(bootstrap_servers: str) -> None:
         )
     finally:
         await client.close()
+
+
+def migrate_kafka() -> None:
+    asyncio.run(install_topics(KafkaSettings().bootstrap_server))

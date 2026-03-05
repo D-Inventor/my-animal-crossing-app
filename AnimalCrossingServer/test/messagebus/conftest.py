@@ -5,7 +5,7 @@ from aiokafka import AIOKafkaProducer
 from pydantic_core import to_json
 from testcontainers.kafka import KafkaContainer
 
-from api.messagebus.install.install_topics import install_topics
+from api.messagebus.migrate import install_topics
 
 
 @pytest.fixture

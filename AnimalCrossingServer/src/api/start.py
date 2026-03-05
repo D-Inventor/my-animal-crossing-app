@@ -1,7 +1,7 @@
 from api.app_builder import AppBuilder
-from api.db.session import get_engine_from_configuration
-from api.messagebus.producer import get_kafka_lifespan_from_config
-from api.telemetry.config import configure_telemetry
+from api.db.lifespan import engine_lifespan_from_configuration
+from api.messagebus.lifespan import kafka_lifespan_from_configuration
+from api.telemetry.lifespan import telemetry_lifespan
 
 
 def main() -> None:
@@ -9,9 +9,9 @@ def main() -> None:
 
     builder = (
         AppBuilder()
-        .add_database_engine(get_engine_from_configuration)
-        .add_message_publisher(get_kafka_lifespan_from_config)
-        .add_sync_lifespan_function(configure_telemetry)
+        .add_database_engine(engine_lifespan_from_configuration)
+        .add_message_publisher(kafka_lifespan_from_configuration)
+        .add_sync_lifespan_function(telemetry_lifespan)
     )
 
     app = builder.build()

@@ -3,7 +3,7 @@ from typing import Annotated, Protocol
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.db.session import get_session
+from api.db.dependencies import get_session
 from api.db.villager import Villager
 
 

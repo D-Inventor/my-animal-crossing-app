@@ -1,12 +1,12 @@
 import itertools
-from typing import Annotated, Any, AsyncGenerator, Awaitable, Callable, Protocol, Self
+from typing import Annotated, AsyncGenerator, Protocol, Self
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
-from api.db.event_handler import EventHandler, get_event_handler_collection_from_app
-from api.db.session import get_session
-from api.db.villager import Villager, VillagerCreated
+from api.db.dependencies import get_session
+from api.db.event_handler import EventHandler, get_event_handler_collection
+from api.db.villager import Villager
 
 
 class UnitOfWork(Protocol):
@@ -62,6 +62,6 @@ async def get_unit_of_work(
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> AsyncGenerator[UnitOfWork, None]:
-    event_handler = get_event_handler_collection_from_app(request.app)
+    event_handler = get_event_handler_collection(request.app)
     async with SessionUnitOfWork(session, event_handler.publish) as unit_of_work:
         yield unit_of_work

@@ -19,7 +19,7 @@ class EventHandlerCollection:
             await handler(events)
 
 
-def get_event_handler_collection_from_app(app: FastAPI) -> EventHandlerCollection:
+def get_event_handler_collection(app: FastAPI) -> EventHandlerCollection:
     key = "_event_handler_collection"
     if not hasattr(app.state, key):
         app.state[key] = EventHandlerCollection()

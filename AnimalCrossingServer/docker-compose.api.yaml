@@ -1,5 +1,6 @@
 include:
   - docker-compose.logging.yaml
+  - docker-compose.kafka.yaml
 
 services:
   api:
@@ -14,6 +15,7 @@ services:
       DB_USERNAME: ac_user
       DB_PASSWORD_FILE: /run/secrets/db_user_password
       DB_DATABASE: animal_crossing
+      KAFKA_BOOTSTRAP_SERVER: kafka:9092
       TELEMETRY_ENABLED: "false"
       TELEMETRY_EXPORTER_ENDPOINT: "http://otel-collector:4317"
     ports:
@@ -35,6 +37,8 @@ services:
       db:
         condition: service_healthy
       otel-collector:
+        condition: service_started
+      kafka:
         condition: service_started
 
   db:

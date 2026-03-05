@@ -1,3 +1,6 @@
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
 from aiokafka import AIOKafkaProducer
 from fastapi import FastAPI
 from pydantic import Field
@@ -27,7 +30,8 @@ def get_kafka_producer_from_app(app: FastAPI) -> AIOKafkaProducer:
     return app.state[key]
 
 
-def configure_messagebus(app: FastAPI) -> None:
+@asynccontextmanager
+async def configure_messagebus(app: FastAPI) -> AsyncGenerator:
     producer = get_kafka_producer_from_app(app)
     event_handler = get_event_handler_collection_from_app(app)
     publisher = EventPublisher(producer)

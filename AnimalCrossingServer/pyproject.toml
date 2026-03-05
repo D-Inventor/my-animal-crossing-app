@@ -24,7 +24,8 @@ dev = [
     "pytest-asyncio",
     "ruff",
     "testcontainers",
-    "httpx"
+    "httpx",
+    "asgi-lifespan"
 ]
 
 [tool.setuptools.packages.find]

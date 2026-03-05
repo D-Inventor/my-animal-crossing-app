@@ -1,22 +1,22 @@
-from api.messagebus.config import configure_messagebus
+from api.app_builder import AppBuilder
+from api.db.session import get_engine_from_configuration
+from api.messagebus.producer import get_kafka_lifespan_from_config
 from api.telemetry.config import configure_telemetry
-
-from .app import create_app
 
 
 def main() -> None:
-    try:
-        import uvicorn
+    import uvicorn
 
-        app = create_app()
+    builder = (
+        AppBuilder()
+        .add_database_engine(get_engine_from_configuration)
+        .add_message_publisher(get_kafka_lifespan_from_config)
+        .add_sync_lifespan_function(configure_telemetry)
+    )
 
-        configure_telemetry(app)
-        configure_messagebus(app)
+    app = builder.build()
 
-        uvicorn.run(app, host="0.0.0.0", port=8000)
-    except Exception as e:
-        print(f"Error running uvicorn: {e}")
-        print("uvicorn not installed. Install with: pip install fastapi uvicorn")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 
 if __name__ == "__main__":

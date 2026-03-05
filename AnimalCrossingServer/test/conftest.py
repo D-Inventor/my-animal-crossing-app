@@ -20,7 +20,6 @@ from api.db import Base
 
 @pytest.fixture(scope="session")
 async def mariadb_engine() -> AsyncGenerator[AsyncEngine, None]:
-    """Create a single MariaDB container for the entire test session."""
     with MySqlContainer("mariadb:12.2") as mysql:
         connection_url = make_url(mysql.get_connection_url()).set(
             drivername="mysql+aiomysql"
@@ -31,17 +30,14 @@ async def mariadb_engine() -> AsyncGenerator[AsyncEngine, None]:
 
 
 @pytest.fixture
-async def mariadb_session(
+async def mariadb_reset_engine(
     mariadb_engine: AsyncEngine,
-) -> AsyncGenerator[async_sessionmaker[AsyncSession], None]:
-    """Reset tables before each test and provide a fresh sessionmaker."""
-    # Drop and recreate all tables for this test
+) -> AsyncGenerator[AsyncEngine, None]:
     async with mariadb_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
-    session_local = async_sessionmaker(bind=mariadb_engine, expire_on_commit=False)
-    yield session_local
+    yield mariadb_engine
 
 
 def run_migrations(connection: Connection, cfg: Config) -> None:

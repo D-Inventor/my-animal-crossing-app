@@ -1,13 +1,15 @@
 import itertools
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 import pytest
 from aiokafka import AIOKafkaProducer, ConsumerRecord
+from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio.session import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncEngine
 from testcontainers.kafka import KafkaContainer
 
-from api.app import create_app
-from api.messagebus.config import configure_messagebus
+from api.app_builder import AppBuilder
 from test.messagebus.kafka_consumer_context import kafka_consumer
 
 
@@ -16,20 +18,27 @@ from test.messagebus.kafka_consumer_context import kafka_consumer
 async def test_event_published_to_kafka_on_request(
     kafka_container: KafkaContainer,
     kafka_producer: AIOKafkaProducer,
-    mariadb_session: async_sessionmaker[AsyncSession],
+    mariadb_reset_engine: AsyncEngine,
 ):
     # given
-    app = create_app()
-    app.state._session_local = mariadb_session
-    app.state._kafka_producer = kafka_producer
-    configure_messagebus(app)
+    @asynccontextmanager
+    async def producer_manager() -> AsyncGenerator[AIOKafkaProducer]:
+        yield kafka_producer
+
+    app = (
+        AppBuilder()
+        .add_database_engine(lambda: mariadb_reset_engine)
+        .add_message_publisher(producer_manager)
+        .build()
+    )
 
     # when
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as client:
-        await client.put("/villagers/flg01", json={"name": "Ribbot"})
-    await kafka_producer.flush()
+    async with LifespanManager(app):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            await client.put("/villagers/flg01", json={"name": "Ribbot"})
+        await kafka_producer.flush()
 
     # then
     async with kafka_consumer(kafka_container, "villagers") as consumer:

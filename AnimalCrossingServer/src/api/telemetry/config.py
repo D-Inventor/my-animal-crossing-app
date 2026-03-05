@@ -15,7 +15,7 @@ from opentelemetry.sdk.trace.export import (
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from api.db.session import get_engine_for_app
+from api.db.session import get_engine
 
 
 class TelemetryConfig(BaseSettings):
@@ -59,4 +59,4 @@ def configure_telemetry(app: FastAPI) -> None:
 
     FastAPIInstrumentor.instrument_app(app)
     AsyncioInstrumentor().instrument()
-    SQLAlchemyInstrumentor().instrument(engine=get_engine_for_app(app).sync_engine)
+    SQLAlchemyInstrumentor().instrument(engine=get_engine(app).sync_engine)

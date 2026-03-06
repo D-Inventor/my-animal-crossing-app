@@ -1,4 +1,4 @@
-from test.villagers.in_memory_repository import TestRepositoryProtocol
+from .in_memory_repository import TestRepositoryProtocol
 
 
 class InMemoryUnitOfWork:

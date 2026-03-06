@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from testcontainers.kafka import KafkaContainer
 
 from api.app_builder import AppBuilder
-from test.messagebus.kafka_consumer_context import kafka_consumer
+from test.api.messagebus.kafka_consumer_context import kafka_consumer
 
 
 @pytest.mark.asyncio

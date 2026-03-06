@@ -60,7 +60,7 @@ async def mariadb_with_migrations(
         "%", "%%"
     )
     alembic_cfg.set_main_option("sqlalchemy.url", connection_url)
-    alembic_dir = Path(__file__).parent.parent / "src" / "api" / "db" / "alembic"
+    alembic_dir = Path(__file__).parent.parent.parent / "src" / "api" / "db" / "alembic"
     alembic_cfg.set_main_option("script_location", str(alembic_dir))
 
     # Run migrations

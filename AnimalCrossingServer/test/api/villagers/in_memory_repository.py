@@ -6,7 +6,7 @@ from api.db.villager import Villager
 
 class TestRepositoryProtocol(Protocol):
     """
-    An in-memory test-repository needs to receive these signals from a test-unit-of-work:
+    An in-memory repository needs to receive these signals from a test-unit-of-work:
 
     **save**: Save is called to simulate a commit on
         the unit-of-work where all the changes are "persisted"

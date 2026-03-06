@@ -5,7 +5,7 @@ from testcontainers.kafka import KafkaContainer
 
 from api.db.villager import VillagerCreated
 from api.messagebus.event_publisher import EventPublisher
-from test.messagebus.kafka_consumer_context import kafka_consumer
+from test.api.messagebus.kafka_consumer_context import kafka_consumer
 
 
 async def test_should_publish_event_to_kafka(

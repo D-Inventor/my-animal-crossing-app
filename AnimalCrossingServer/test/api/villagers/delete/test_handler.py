@@ -2,8 +2,8 @@ import pytest
 
 from api.db.villager import Villager
 from api.villagers.delete import endpoint
-from test.villagers.in_memory_repository import InMemoryVillagerRepository
-from test.villagers.in_memory_unit_of_work import InMemoryUnitOfWork
+from test.api.villagers.in_memory_repository import InMemoryVillagerRepository
+from test.api.villagers.in_memory_unit_of_work import InMemoryUnitOfWork
 
 
 @pytest.mark.asyncio

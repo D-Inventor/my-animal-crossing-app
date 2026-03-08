@@ -23,7 +23,7 @@ Typing and documentation
 
 - Add type hints for public functions and methods. Prefer precise types over
   `Any` when practical.
-- Write concise docstrings for modules, classes, and public functions using
+- Do not write docstrings ever, unless explicitly requested. When requested, use
   Google or NumPy style (be consistent).
 
 Testing

@@ -36,7 +36,9 @@ namespaces = false
 import-worker = "import_worker.start:main"
 api = "api.start:main"
 api-migrate = "api.migrate:main"
+messaging-migrate = "messaging.migrate:main"
 automatcher = "automatcher.start:main"
+import-event-orchestrator = "import_event_orchestrator.start:main"
 
 [tool.pytest.ini_options]
 pythonpath = "./src"

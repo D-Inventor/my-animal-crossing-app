@@ -1,6 +1,7 @@
 from aiokafka import AIOKafkaProducer
 
 from api.db.villager import VillagerCreated
+from messaging.topics import MessageTopic
 
 
 class EventPublisher:
@@ -9,4 +10,4 @@ class EventPublisher:
 
     async def publish(self, events: list[VillagerCreated]) -> None:
         for event in events:
-            await self._kafka.send("villagers", event)
+            await self._kafka.send(MessageTopic.VILLAGERS.value, event)

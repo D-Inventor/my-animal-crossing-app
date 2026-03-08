@@ -22,4 +22,4 @@ async def test_should_publish_event_to_kafka(
     async with kafka_consumer(kafka_container, topic="villagers") as consumer:
         messages = await consumer.getmany(timeout_ms=100)
         messagelist: list[ConsumerRecord] = list(itertools.chain(*messages.values()))
-        assert messagelist[0].value == {"type": "VillagerCreated", "id": "flg01"}
+        assert messagelist[0].value == {"$type": "VillagerCreated", "id": "flg01"}

@@ -2,20 +2,14 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
 from aiokafka import AIOKafkaProducer
-from pydantic_core import to_json
 
-from messaging.config import KafkaSettings
+from messaging.producer import create_producer
 
 
 @asynccontextmanager
 async def kafka_lifespan_from_configuration() -> AsyncGenerator[AIOKafkaProducer]:
 
-    kafka_settings = KafkaSettings()
-    producer = AIOKafkaProducer(
-        bootstrap_servers=kafka_settings.bootstrap_server,
-        value_serializer=lambda v: to_json(v),
-        enable_idempotence=True,
-    )
+    producer = create_producer()
 
     try:
         await producer.start()

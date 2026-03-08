@@ -1,8 +1,9 @@
 from typing import Self, TypedDict, Unpack
 
-from pydantic import BaseModel
 from sqlalchemy import String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from messaging.villager.events import VillagerCreated
 
 
 class Base(DeclarativeBase):
@@ -12,11 +13,6 @@ class Base(DeclarativeBase):
 class VillagerType(TypedDict):
     id: str
     name: str
-
-
-class VillagerCreated(BaseModel):
-    type: str = "VillagerCreated"
-    id: str
 
 
 class Villager(Base):

@@ -45,4 +45,4 @@ async def test_event_published_to_kafka_on_request(
         messages = await consumer.getmany(timeout_ms=100)
         messagelist: list[ConsumerRecord] = list(itertools.chain(*messages.values()))
         assert len(messagelist) > 0
-        assert messagelist[0].value == {"type": "VillagerCreated", "id": "flg01"}
+        assert messagelist[0].value == {"$type": "VillagerCreated", "id": "flg01"}

@@ -1,0 +1,28 @@
+include:
+  - docker-compose.logging.yaml
+  - docker-compose.kafka.yaml
+
+services:
+  import-event-orchestrator:
+    build:
+      context: .
+      dockerfile: import_event_orchestrator.dockerfile
+    image: import-event-orchestrator:latest
+    restart: unless-stopped
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: kafka:9092
+      TELEMETRY_ENABLED: "false"
+      TELEMETRY_EXPORTER_ENDPOINT: "http://otel-collector:4317"
+    develop:
+      watch:
+        - action: rebuild
+          path: src/import_event_orchestrator
+        - action: rebuild
+          path: src/messaging
+        - action: rebuild
+          path: pyproject.toml
+    depends_on:
+      otel-collector:
+        condition: service_started
+      kafka:
+        condition: service_healthy

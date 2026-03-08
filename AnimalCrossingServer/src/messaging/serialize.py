@@ -34,9 +34,7 @@ class MessageSerialize:
 
     def serialize(self, message: BaseModel) -> bytes:
         if type(message) not in self._registered_types:
-            raise ValueError(
-                f"Type {message.__class__.__name__} is not registered with this serializer"
-            )
+            raise ValueError(f"Type {message.__class__.__name__} is not registered")
         payload = message.model_dump()
         payload["$type"] = message.__class__.__name__
         return json.dumps(payload).encode("utf-8")

@@ -39,7 +39,7 @@ class MessageSerialize:
         payload["$type"] = message.__class__.__name__
         return json.dumps(payload).encode("utf-8")
 
-    def deserialize(self, data: bytes) -> BaseModel:
+    def deserialize(self, data: bytes) -> BaseModel | MessageError:
         try:
             decoded_data = data.decode("utf-8")
             payload = json.loads(decoded_data)

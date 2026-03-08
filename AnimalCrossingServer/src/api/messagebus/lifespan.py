@@ -4,7 +4,7 @@ from typing import AsyncGenerator
 from aiokafka import AIOKafkaProducer
 from pydantic_core import to_json
 
-from api.messagebus.config import KafkaSettings
+from messaging.config import KafkaSettings
 
 
 @asynccontextmanager

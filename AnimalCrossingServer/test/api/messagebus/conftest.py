@@ -5,13 +5,12 @@ from aiokafka import AIOKafkaProducer
 from pydantic_core import to_json
 from testcontainers.kafka import KafkaContainer
 
-from api.messagebus.migrate import install_topics
+from messaging.migrate import install_topics
 
 
 @pytest.fixture
 async def kafka_container() -> AsyncGenerator[KafkaContainer, None]:
     with KafkaContainer(image="confluentinc/cp-kafka:8.0.4").with_kraft() as kafka:
-        kafka.start()
         await install_topics(kafka.get_bootstrap_server())
         yield kafka
 

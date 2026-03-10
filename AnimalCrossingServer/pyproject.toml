@@ -36,9 +36,12 @@ namespaces = false
 import-worker = "import_worker.start:main"
 api = "api.start:main"
 api-migrate = "api.migrate:main"
+api-db-revision = "api.db.revision:main"
 messaging-migrate = "messaging.migrate:main"
 automatcher = "automatcher.start:main"
 import-event-orchestrator = "import_event_orchestrator.start:main"
+import-event-orchestrator-migrate = "import_event_orchestrator.migrate:main"
+import-event-orchestrator-db-revision = "import_event_orchestrator.db.revision:main"
 
 [tool.pytest.ini_options]
 pythonpath = "./src"
@@ -73,6 +76,14 @@ script_location = "%(here)s/src/api/db/alembic"
 prepend_sys_path = [
     "."
 ]
+
+[tool.animal_crossing.migrations.api]
+script_location = "src/api/db/alembic"
+version_table = "api_version"
+
+[tool.animal_crossing.migrations.import_event_orchestrator]
+script_location = "src/import_event_orchestrator/db/alembic"
+version_table = "import_event_orchestrator_version"
 
 # timezone to use when rendering the date within the migration file
 # as well as the filename.

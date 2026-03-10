@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from api.db.config import DatabaseSettings
+from db.config import DatabaseSettings
 
 
 def engine_lifespan_from_configuration() -> AsyncEngine:

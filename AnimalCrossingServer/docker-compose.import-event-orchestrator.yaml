@@ -1,6 +1,7 @@
 include:
   - docker-compose.logging.yaml
   - docker-compose.kafka.yaml
+  - docker-compose.mariadb.yaml
 
 services:
   import-event-orchestrator:
@@ -10,6 +11,11 @@ services:
     image: import-event-orchestrator:latest
     restart: unless-stopped
     environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: ac_user
+      DB_PASSWORD_FILE: /run/secrets/db_user_password
+      DB_DATABASE: animal_crossing
       KAFKA_BOOTSTRAP_SERVER: kafka:9092
       TELEMETRY_ENABLED: "false"
       TELEMETRY_EXPORTER_ENDPOINT: "http://otel-collector:4317"
@@ -26,3 +32,5 @@ services:
         condition: service_started
       kafka:
         condition: service_healthy
+    secrets:
+      - db_user_password

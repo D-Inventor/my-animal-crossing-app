@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir -e .
 
 COPY --chown=appuser:appgroup src/import_event_orchestrator src/import_event_orchestrator
 COPY --chown=appuser:appgroup src/messaging src/messaging
+COPY --chown=appuser:appgroup src/db src/db
 
 USER appuser
-ENTRYPOINT ["sh", "-c", "messaging-migrate && exec import-event-orchestrator"]
+ENTRYPOINT ["sh", "-c", "messaging-migrate && import-event-orchestrator-migrate && exec import-event-orchestrator"]

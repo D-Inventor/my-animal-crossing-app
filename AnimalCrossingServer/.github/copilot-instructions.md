@@ -9,7 +9,7 @@ Purpose
 
 Scope
 
-- Applies to the whole repository. Relevant files: `src/`, `test/`, `pyproject.toml`, `Dockerfile`.
+- Applies to the whole repository. Relevant files: `src/`, `test/`, `pyproject.toml`.
 
 Project conventions
 
@@ -36,6 +36,23 @@ Testing
 - It is not necessary to write tests if the requested change is for moving files, creating folders or other non-behavioural changes. In these cases, simply make the change without writing tests.
 - All test names must start with `test_should_` and describe the expected behavior, e.g. `test_should_return_400_for_invalid_input`.
 - Every test should contain comments for given, when and then sections, even if the test is simple. If any of these sections are combined on the same line, the sections may be specified in a single comment.
+- A good test is exactly 3 lines long: one line for given, one for when and one for then. You should aim to get as close to three lines as possible.
+- A good test hides unrelated properties as much as possible. A good test makes relevant properties as explicit as possible.
+- A good test only uses the system under test for the when section. A good test does not use the system under test for the given or then sections.
+- Mocks should be avoided as much as practical. Prefer custom stubs or fakes.
+- Following is an example of a good test:
+
+```python
+def test_should_greet_user_by_name():
+    # given
+    user = create_user(name="Alice")
+
+    # when
+    greeting = greet(user)
+
+    # then
+    assert "Alice" in greeting
+```
 
 Dependencies and packaging
 

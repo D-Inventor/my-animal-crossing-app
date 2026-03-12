@@ -29,9 +29,9 @@ class SagaState(Base):
     data: Mapped[dict] = mapped_column(JSON, nullable=False, default={})
 
     @classmethod
-    def create(cls) -> Self:
+    def create(cls, id: UUID | None = None) -> Self:
         return cls(
-            id=uuid4(),
+            id=id or uuid4(),
             state=SagaStatus.STARTED,
             completed_steps=[],
             data={},

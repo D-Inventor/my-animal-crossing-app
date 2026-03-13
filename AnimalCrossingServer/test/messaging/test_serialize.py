@@ -1,4 +1,5 @@
 import json
+from uuid import UUID, uuid4
 
 import pytest
 from pydantic import BaseModel
@@ -76,3 +77,24 @@ def test_should_raise_error_for_unregistered_type() -> None:
     # when
     with pytest.raises(ValueError):
         serializer.serialize(message)
+
+
+def test_should_deserialize_uuid_field_for_registered_model() -> None:
+    # given
+    class UuidModel(BaseModel):
+        saga_id: UUID
+
+    expected_id = uuid4()
+    serializer = MessageSerialize()
+    serializer.register_type(UuidModel)
+    payload = ('{"$type":"UuidModel","saga_id":"' + str(expected_id) + '"}').encode(
+        "utf-8"
+    )
+
+    # when
+    result = serializer.deserialize(payload)
+
+    # then
+    assert isinstance(result, UuidModel)
+    assert isinstance(result.saga_id, UUID)
+    assert result.saga_id == expected_id

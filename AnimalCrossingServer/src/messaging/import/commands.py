@@ -1,7 +1,0 @@
-import uuid
-
-from pydantic import BaseModel
-
-
-class ImportVillagersCommand(BaseModel):
-    id: uuid.UUID

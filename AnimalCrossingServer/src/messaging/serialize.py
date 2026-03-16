@@ -63,7 +63,15 @@ class MessageSerialize:
 
 def create_default_serializer() -> MessageSerialize:
     serializer = MessageSerialize()
+    from messaging.imports.commands import (
+        DownloadVillagerSnapshotCommand,
+        ImportVillagersCommand,
+    )
+    from messaging.imports.events import VillagerSnapshotDownloadedEvent
     from messaging.villager.events import VillagerCreated
 
+    serializer.register_type(ImportVillagersCommand)
+    serializer.register_type(DownloadVillagerSnapshotCommand)
+    serializer.register_type(VillagerSnapshotDownloadedEvent)
     serializer.register_type(VillagerCreated)
     return serializer

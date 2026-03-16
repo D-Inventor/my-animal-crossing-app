@@ -19,11 +19,17 @@ class SagaStatus(str, Enum):
 
 
 class SagaState(Base):
-    __tablename__ = "saga_states"
+    __tablename__ = "saga_state"
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
     state: Mapped[SagaStatus] = mapped_column(
-        SQLEnum(SagaStatus), nullable=False, default=SagaStatus.STARTED
+        SQLEnum(
+            SagaStatus,
+            name="sagastatus",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
+        nullable=False,
+        default=SagaStatus.STARTED,
     )
     completed_steps: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=[])
     data: Mapped[dict] = mapped_column(JSON, nullable=False, default={})

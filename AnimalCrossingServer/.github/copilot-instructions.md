@@ -29,30 +29,14 @@ Typing and documentation
 Testing
 
 - Use `pytest` for tests in the `test/` folder. Aim for deterministic, fast
-  tests with clear arrange/act/assert structure.
+  tests with clear given/when/then structure.
 - Add tests for bug fixes and non-obvious behavior. Keep unit tests isolated
-  from external services (use fixtures and mocks where appropriate).
-- Use a TDD approach at all times. Whenever you are asked to make a behavioural change, do not make the change, but instead write a failing test that demonstrates the need for the change. Ask for confirmation that the test is sufficient to demonstrate the need for the change, and only then make the change and verify that the test passes.
+  from external services.
+- Use a TDD approach at all times. Always read the instructions in .github/tdd-instructions.md before writing tests.
 - It is not necessary to write tests if the requested change is for moving files, creating folders or other non-behavioural changes. In these cases, simply make the change without writing tests.
 - All test names must start with `test_should_` and describe the expected behavior, e.g. `test_should_return_400_for_invalid_input`.
 - Every test should contain comments for given, when and then sections, even if the test is simple. If any of these sections are combined on the same line, the sections may be specified in a single comment.
-- A good test is exactly 3 lines long: one line for given, one for when and one for then. You should aim to get as close to three lines as possible.
-- A good test hides unrelated properties as much as possible. A good test makes relevant properties as explicit as possible.
-- A good test only uses the system under test for the when section. A good test does not use the system under test for the given or then sections.
 - Mocks should be avoided as much as practical. Prefer custom stubs or fakes.
-- Following is an example of a good test:
-
-```python
-def test_should_greet_user_by_name():
-    # given
-    user = create_user(name="Alice")
-
-    # when
-    greeting = greet(user)
-
-    # then
-    assert "Alice" in greeting
-```
 
 Dependencies and packaging
 
@@ -75,13 +59,6 @@ When to ask clarifying questions
 
 - If a change affects public APIs, database schema, or cross-cutting
   architecture, ask for scope, migration plans, and rollout strategy.
-
-Examples of good prompts
-
-- "Refactor `src/auth.py` to use dependency injection; preserve behaviour and
-  add unit tests for edge cases."
-- "Write pytest tests for `src/service/user.py` covering invalid inputs and
-  authentication failures."
 
 Forbidden actions
 

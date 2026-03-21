@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import signal
 
 from aiokafka import AIOKafkaProducer
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -12,6 +11,7 @@ from import_event_orchestrator.villager_import_orchestrator import (
     VillagerImportOrchestrator,
 )
 from messaging.consumer import create_consumer
+from messaging.handler import bootstrap_signals
 from messaging.producer import create_producer
 from messaging.topics import MessageTopic
 
@@ -56,17 +56,6 @@ async def process_message(
 
 
 async def execute() -> None:
-    main_task = asyncio.create_task(run_orchestrator())
-
-    def signal_handler(sig: int) -> None:
-        print(f"Received signal {sig}, shutting down...")
-        main_task.cancel()
-
-    loop = asyncio.get_running_loop()
-    loop.add_signal_handler(signal.SIGINT, signal_handler, signal.SIGINT)
-    loop.add_signal_handler(signal.SIGTERM, signal_handler, signal.SIGTERM)
-
-    try:
-        await main_task
-    except asyncio.CancelledError:
-        print("Orchestrator task cancelled, exiting...")
+    await bootstrap_signals(
+        asyncio.get_running_loop(), asyncio.create_task(run_orchestrator())
+    )

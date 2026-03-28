@@ -7,8 +7,8 @@ from aiokafka import AIOKafkaConsumer, AIOKafkaProducer, ConsumerRecord
 from pydantic_core import from_json
 from testcontainers.kafka import KafkaContainer
 
-from import_event_orchestrator.kafka_command_dispatcher import KafkaCommandDispatcher
 from messaging.imports.commands import DownloadVillagerSnapshotCommand
+from messaging.kafka.kafka_message_dispatcher import KafkaMessageDispatcher
 from messaging.migrate import install_topics
 from messaging.serialize import MessageSerialize
 from messaging.topics import MessageTopic
@@ -46,7 +46,7 @@ async def test_should_dispatch_command_to_import_commands_topic(
     kafka_producer: AIOKafkaProducer,
 ) -> None:
     # given
-    dispatcher = KafkaCommandDispatcher(kafka_producer)
+    dispatcher = KafkaMessageDispatcher(kafka_producer)
     command = DownloadVillagerSnapshotCommand(saga_id=uuid4())
 
     # when

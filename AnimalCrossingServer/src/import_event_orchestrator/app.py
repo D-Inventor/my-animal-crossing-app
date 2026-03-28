@@ -1,61 +1,63 @@
-import asyncio
 import logging
+from contextlib import AsyncExitStack
+from types import CoroutineType
+from typing import Any, Callable
 
-from aiokafka import AIOKafkaProducer
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from db.config import DatabaseSettings
 from import_event_orchestrator.db.saga_repository import SessionSagaRepository
-from import_event_orchestrator.kafka_command_dispatcher import KafkaCommandDispatcher
+from import_event_orchestrator.dependencies import (
+    create_engine,
+    create_session,
+)
 from import_event_orchestrator.villager_import_orchestrator import (
     VillagerImportOrchestrator,
 )
-from messaging.consumer import create_consumer
-from messaging.handler import bootstrap_signals
-from messaging.producer import create_producer
+from messaging.handler.handler_endpoint import (
+    MessageContext,
+    accept_all_messages,
+)
+from messaging.kafka.kafka_message_handler_app import KafkaMessageHandlerApp
 from messaging.topics import MessageTopic
 
 logger = logging.getLogger(__name__)
 
 
-async def run_orchestrator() -> None:
-    consumer = create_consumer(
-        [MessageTopic.IMPORT_COMMANDS, MessageTopic.IMPORT_EVENTS],
-        group_id="import-event-orchestrator",
-    )
-    producer = create_producer()
-    engine = create_async_engine(DatabaseSettings().get_connection_url(), echo=False)
-    session_maker = async_sessionmaker(bind=engine, expire_on_commit=False)
+async def execute() -> None:
+    async with AsyncExitStack() as stack:
+        session_maker = await stack.enter_async_context(create_engine())
 
-    await consumer.start()
-    await producer.start()
-    try:
-        async for message in consumer:
-            await process_message(producer, session_maker, message.value)
-    finally:
-        print("Shutting down orchestrator...")
-        await consumer.stop()
-        await producer.stop()
-        await engine.dispose()
+        app = (
+            KafkaMessageHandlerApp("import-event-orchestrator")
+            .add_topics([MessageTopic.IMPORT_COMMANDS, MessageTopic.IMPORT_EVENTS])
+            .add_handler_func(
+                create_message_processor(session_maker), accept_all_messages
+            )
+        )
+
+        await app.run()
+
+
+def create_message_processor(
+    session_maker: async_sessionmaker[AsyncSession],
+) -> Callable[..., CoroutineType[Any, Any, None]]:
+    async def message_processor(message: object, context: MessageContext) -> None:
+        async with create_session(session_maker) as session:
+            repository = SessionSagaRepository(session)
+            await process_message(message, context, session, repository)
+
+    return message_processor
 
 
 async def process_message(
-    producer: AIOKafkaProducer,
-    session_maker: async_sessionmaker[AsyncSession],
     message: object,
+    context: MessageContext,
+    session: AsyncSession,
+    repository: SessionSagaRepository,
 ) -> None:
     try:
-        async with session_maker() as session:
-            repository = SessionSagaRepository(session)
-            command_dispatcher = KafkaCommandDispatcher(producer)
-            orchestrator = VillagerImportOrchestrator(repository, command_dispatcher)
-            await orchestrator.handle(message)
-            await session.commit()
+        orchestrator = VillagerImportOrchestrator(repository)
+        await orchestrator.handle(message, context)
+        await session.commit()
     except Exception as e:
         logger.exception("Error processing message", exc_info=e)
-
-
-async def execute() -> None:
-    await bootstrap_signals(
-        asyncio.get_running_loop(), asyncio.create_task(run_orchestrator())
-    )

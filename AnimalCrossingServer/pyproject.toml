@@ -3,6 +3,7 @@ name = "animal-crossing-server"
 dynamic = ["version"]
 requires-python = ">= 3.14"
 dependencies = [
+    "dependency-injector",
     "fastapi[standard-no-fastapi-cloud-cli]",
     "SQLAlchemy[asyncio]",
     "pydantic-settings",

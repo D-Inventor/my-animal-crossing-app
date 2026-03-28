@@ -9,6 +9,7 @@ def configure_logging() -> None:
     logging.getLogger(
         "import_event_orchestrator.villager_import_orchestrator"
     ).setLevel(logging.DEBUG)
+    logging.getLogger("import_event_orchestrator.dependencies").setLevel(logging.DEBUG)
 
 
 def main() -> None:

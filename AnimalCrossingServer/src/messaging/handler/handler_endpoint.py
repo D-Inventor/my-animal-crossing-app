@@ -1,5 +1,6 @@
+import asyncio
 import inspect
-from typing import Callable
+from typing import Awaitable, Callable, TypeVar
 
 
 class _SkipArgument:
@@ -7,6 +8,9 @@ class _SkipArgument:
 
 
 _SKIP_ARGUMENT = _SkipArgument()
+
+HandlerFunc = Callable[..., None | object]
+AsyncHandlerFunc = Callable[..., Awaitable[None | object]]
 
 
 class MessageContext:
@@ -23,7 +27,8 @@ class MessageContext:
 class HandlerEndpoint:
     def __init__(
         self,
-        handler_invoker: Callable[[object, MessageContext], None | object],
+        handler_invoker: Callable[[object, MessageContext], None | object]
+        | Callable[[object, MessageContext], Awaitable[None | object]],
         message_filter: Callable[[object], bool],
     ) -> None:
         self._handler_invoker = handler_invoker
@@ -31,14 +36,14 @@ class HandlerEndpoint:
 
     async def handle(self, message: object, context: MessageContext) -> None:
         if self._message_filter(message):
-            result = self._handler_invoker(message, context)
+            result = await self._handler_invoker(message, context)
             if result is not None:
                 context.publish(result)
 
     @classmethod
     def create(
         cls,
-        handler_func: Callable[..., None | object],
+        handler_func: HandlerFunc | AsyncHandlerFunc,
         message_filter: Callable[[object], bool] | None = None,
     ) -> HandlerEndpoint:
         return cls(
@@ -50,7 +55,7 @@ class HandlerEndpoint:
 
 
 def _create_filter_from_handler_signature(
-    handler_func: Callable[..., None | object],
+    handler_func: HandlerFunc | AsyncHandlerFunc,
 ) -> Callable[[object], bool]:
     params = list(inspect.signature(handler_func).parameters.values())
     if not params:
@@ -73,21 +78,37 @@ def _create_parameter_resolver(
 
 
 def _create_handler_invoker(
-    handler_func: Callable[..., None | object],
-) -> Callable[[object, MessageContext], None | object]:
+    handler_func: HandlerFunc | AsyncHandlerFunc,
+) -> Callable[[object, MessageContext], Awaitable[None | object]]:
     params = list(inspect.signature(handler_func).parameters.values())
     parameter_resolvers = [_create_parameter_resolver(param) for param in params[1:]]
 
-    def invoke(message: object, context: MessageContext) -> None | object:
+    async_handler: AsyncHandlerFunc = (
+        handler_func
+        if inspect.iscoroutinefunction(handler_func)
+        else _make_async(handler_func)
+    )
+
+    def invoke(message: object, context: MessageContext) -> Awaitable[None | object]:
         args: list[object] = [message]
         for resolver in parameter_resolvers:
             resolved = resolver(message, context)
             if resolved is _SKIP_ARGUMENT:
                 continue
             args.append(resolved)
-        return handler_func(*args)
+        return async_handler(*args)
 
     return invoke
+
+
+T = TypeVar("T")
+
+
+def _make_async(func: Callable[..., T]) -> Callable[..., Awaitable[T]]:
+    def wrapper(*args, **kwargs) -> Awaitable[T]:  # noqa: ANN002, ANN003
+        return asyncio.to_thread(func, *args, **kwargs)
+
+    return wrapper
 
 
 def accept_all_messages(_: object) -> bool:

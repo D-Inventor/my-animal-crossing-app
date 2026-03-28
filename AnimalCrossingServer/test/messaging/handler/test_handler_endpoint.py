@@ -73,12 +73,31 @@ async def test_should_use_custom_filter_to_skip_handler_func() -> None:
 
 
 @pytest.mark.asyncio
+async def test_should_await_async_handler_functions() -> None:
+    # given
+    received_messages: list[object] = []
+
+    async def async_handler_func(received_message: object) -> None:
+        received_messages.append(received_message)
+
+    endpoint = HandlerEndpoint.create(
+        async_handler_func, message_filter=accept_all_messages
+    )
+
+    # when
+    await endpoint.handle(OtherMessage(), MessageContext())
+
+    # then
+    assert len(received_messages) == 1
+
+
+@pytest.mark.asyncio
 async def test_should_dispatch_handler_func_return_value() -> None:
     # given
     reply = OtherMessage()
     context = MessageContext()
 
-    def handler_func(received_message: TestMessage) -> OtherMessage:
+    def handler_func(_: TestMessage) -> OtherMessage:
         return reply
 
     endpoint = HandlerEndpoint.create(handler_func)
@@ -95,7 +114,7 @@ async def test_should_not_dispatch_when_handler_func_returns_none() -> None:
     # given
     context = MessageContext()
 
-    def handler_func(received_message: TestMessage) -> None:
+    def handler_func(_: TestMessage) -> None:
         return None
 
     endpoint = HandlerEndpoint.create(handler_func)
@@ -115,7 +134,7 @@ async def test_should_pass_message_context_to_handler_func_when_expected() -> No
     context = MessageContext()
 
     def handler_func(
-        received_message: TestMessage,
+        _: TestMessage,
         received_context: MessageContext = default_context,
     ) -> None:
         received_contexts.append(received_context)

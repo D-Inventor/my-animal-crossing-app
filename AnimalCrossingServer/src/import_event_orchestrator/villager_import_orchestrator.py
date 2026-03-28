@@ -1,8 +1,9 @@
 import logging
-from typing import Protocol
 
 from import_event_orchestrator.db.saga_repository import SagaRepository
 from import_event_orchestrator.db.saga_state import SagaState, SagaStatus
+from messaging.handler import MessageDispatcher
+from messaging.handler.handler_endpoint import MessageContext
 from messaging.imports.commands import (
     DownloadVillagerSnapshotCommand,
     ImportVillagersCommand,
@@ -12,34 +13,25 @@ from messaging.imports.events import VillagerSnapshotDownloadedEvent
 logger = logging.getLogger(__name__)
 
 
-class CommandDispatcher(Protocol):
-    async def dispatch(self, command: object) -> None: ...
-
-
 class VillagerImportOrchestrator:
-    def __init__(
-        self, saga_repository: SagaRepository, command_dispatcher: CommandDispatcher
-    ) -> None:
+    def __init__(self, saga_repository: SagaRepository) -> None:
         self.saga_repository = saga_repository
-        self.command_dispatcher = command_dispatcher
 
-    async def handle(self, message: object) -> None:
+    async def handle(self, message: object, context: MessageContext) -> None:
         match message:
             case ImportVillagersCommand() as command:
-                await self._handle_import_villagers_command(command)
+                await self._handle_import_villagers_command(command, context)
             case VillagerSnapshotDownloadedEvent() as event:
                 await self._handle_villager_snapshot_downloaded_event(event)
             case _:
                 self._log_ignored_message(message)
 
     async def _handle_import_villagers_command(
-        self, command: ImportVillagersCommand
+        self, command: ImportVillagersCommand, context: MessageContext
     ) -> None:
         saga = SagaState.create(id=command.id)
         await self.saga_repository.add(saga)
-        await self.command_dispatcher.dispatch(
-            DownloadVillagerSnapshotCommand(saga_id=saga.id)
-        )
+        context.publish(DownloadVillagerSnapshotCommand(saga_id=saga.id))
         logger.debug("started import saga %s", command.id)
 
     async def _handle_villager_snapshot_downloaded_event(

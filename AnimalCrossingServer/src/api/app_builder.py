@@ -1,14 +1,13 @@
 from contextlib import AsyncExitStack, asynccontextmanager
 from typing import AsyncContextManager, AsyncGenerator, Callable, Self
 
-from aiokafka import AIOKafkaProducer
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from api.db.event_handler import get_event_handler_collection
 from api.db.lifespan import set_engine
-from api.messagebus.event_publisher import EventPublisher
 from api.villagers import router as villagers_router
+from messaging.handler import MessageDispatcher
 
 
 class AppBuilder:
@@ -41,14 +40,18 @@ class AppBuilder:
         return self
 
     def add_message_publisher(
-        self, value: Callable[..., AsyncContextManager[AIOKafkaProducer]]
+        self, value: Callable[..., AsyncContextManager[MessageDispatcher]]
     ) -> Self:
         @asynccontextmanager
         async def add_publisher_and_subscribe(app: FastAPI) -> AsyncGenerator:
-            async with value() as kafka_producer:
-                publisher = EventPublisher(kafka_producer)
+            async with value() as dispatcher:
+
+                async def dispatch_messages(messages: list[object]) -> None:
+                    for message in messages:
+                        await dispatcher.dispatch(message)
+
                 event_handler = get_event_handler_collection(app)
-                event_handler.subscribe(publisher.publish)
+                event_handler.subscribe(dispatch_messages)
                 yield
 
         self.add_lifespan_manager(add_publisher_and_subscribe)

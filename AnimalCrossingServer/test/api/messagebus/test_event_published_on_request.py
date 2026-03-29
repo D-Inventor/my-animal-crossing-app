@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from testcontainers.kafka import KafkaContainer
 
 from api.app_builder import AppBuilder
+from messaging.kafka import KafkaMessageDispatcher
 from test.api.messagebus.kafka_consumer_context import kafka_consumer
 
 
@@ -23,7 +24,7 @@ async def test_event_published_to_kafka_on_request(
     # given
     @asynccontextmanager
     async def producer_manager() -> AsyncGenerator[AIOKafkaProducer]:
-        yield kafka_producer
+        yield KafkaMessageDispatcher(kafka_producer)
 
     app = (
         AppBuilder()

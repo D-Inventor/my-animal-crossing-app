@@ -12,7 +12,7 @@ The following example shows a minimal working app:
 import asyncio
 
 from messaging.handler.handler_endpoint import accept_all_messages
-from messaging.kafka.kafka_message_handler_app import KafkaMessageHandlerApp
+from messaging.kafka import KafkaMessageHandlerApp
 from messaging.topics import MessageTopic
 
 async def run_message_app():

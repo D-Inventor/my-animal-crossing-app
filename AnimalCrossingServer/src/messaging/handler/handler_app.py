@@ -4,7 +4,7 @@ import logging
 from contextlib import AsyncExitStack
 from typing import AsyncContextManager, AsyncIterable, Awaitable, Callable, Protocol
 
-from messaging.handler.handler_endpoint_collection import HandlerEndpointCollection
+from .handler_endpoint_collection import HandlerEndpointCollection
 
 logger = logging.getLogger(__name__)
 

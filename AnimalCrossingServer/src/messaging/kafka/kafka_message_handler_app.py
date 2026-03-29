@@ -1,11 +1,14 @@
 import asyncio
 from typing import Self
 
-from messaging.handler import bootstrap_signals
-from messaging.handler.handler_app import MessageHandlerApp
-from messaging.handler.handler_endpoint_collection import HandlerEndpointCollection
-from messaging.kafka.dependency import create_kafka_consumer, create_kafka_producer
+from messaging.handler import (
+    HandlerEndpointCollection,
+    MessageHandlerApp,
+    bootstrap_signals,
+)
 from messaging.topics import MessageTopic
+
+from .dependency import create_kafka_consumer, create_kafka_producer
 
 
 class KafkaMessageHandlerApp(HandlerEndpointCollection):

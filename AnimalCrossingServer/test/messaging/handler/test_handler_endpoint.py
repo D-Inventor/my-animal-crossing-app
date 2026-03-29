@@ -1,6 +1,6 @@
 import pytest
 
-from messaging.handler.handler_endpoint import (
+from messaging.handler import (
     HandlerEndpoint,
     MessageContext,
     accept_all_messages,

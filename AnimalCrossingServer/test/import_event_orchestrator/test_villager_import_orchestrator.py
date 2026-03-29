@@ -7,7 +7,7 @@ from import_event_orchestrator.db.saga_state import SagaState, SagaStatus
 from import_event_orchestrator.villager_import_orchestrator import (
     VillagerImportOrchestrator,
 )
-from messaging.handler.handler_endpoint import MessageContext
+from messaging.handler import MessageContext
 from messaging.imports.commands import (
     DownloadVillagerSnapshotCommand,
     ImportVillagersCommand,

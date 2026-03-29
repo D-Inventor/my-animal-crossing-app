@@ -13,11 +13,11 @@ from import_event_orchestrator.dependencies import (
 from import_event_orchestrator.villager_import_orchestrator import (
     VillagerImportOrchestrator,
 )
-from messaging.handler.handler_endpoint import (
+from messaging.handler import (
     MessageContext,
     accept_all_messages,
 )
-from messaging.kafka.kafka_message_handler_app import KafkaMessageHandlerApp
+from messaging.kafka import KafkaMessageHandlerApp
 from messaging.topics import MessageTopic
 
 logger = logging.getLogger(__name__)

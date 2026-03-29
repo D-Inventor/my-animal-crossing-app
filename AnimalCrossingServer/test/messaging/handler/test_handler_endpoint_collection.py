@@ -1,7 +1,6 @@
 import pytest
 
-from messaging.handler.handler_endpoint import HandlerEndpoint
-from messaging.handler.handler_endpoint_collection import HandlerEndpointCollection
+from messaging.handler import HandlerEndpointCollection
 
 
 class TestMessage:

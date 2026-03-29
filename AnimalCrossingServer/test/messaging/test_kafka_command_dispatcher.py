@@ -8,7 +8,7 @@ from pydantic_core import from_json
 from testcontainers.kafka import KafkaContainer
 
 from messaging.imports.commands import DownloadVillagerSnapshotCommand
-from messaging.kafka.kafka_message_dispatcher import KafkaMessageDispatcher
+from messaging.kafka import KafkaMessageDispatcher
 from messaging.migrate import install_topics
 from messaging.serialize import MessageSerialize
 from messaging.topics import MessageTopic

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from import_event_orchestrator.app import process_message
 from import_event_orchestrator.db.saga_repository import SessionSagaRepository
 from import_event_orchestrator.db.saga_state import SagaState
-from messaging.handler.handler_endpoint import MessageContext
+from messaging.handler import MessageContext
 from messaging.imports.commands import ImportVillagersCommand
 
 

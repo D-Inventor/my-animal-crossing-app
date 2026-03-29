@@ -10,75 +10,43 @@ The following example shows a minimal working app:
 
 ```python
 import asyncio
+import uuid
+
+from pydantic import BaseModel
 
 from messaging.handler import accept_all_messages
 from messaging.kafka import KafkaMessageHandlerApp
-from messaging import MessageTopic
+from messaging import message, MessageTopic
+
+@message(MessageTopic.PANCAKES)
+class BakePancakeCommand(BaseModel):
+    command_id: uuid.UUID
 
 async def run_message_app():
     app = (
         KafkaMessageHandlerApp("your-group-id")
-        .add_topics([MessageTopic.VILLAGERS])
-        .add_handler_func(process_message, accept_all_messages)
+        .add_topics([MessageTopic.PANCAKES])
+        .add_handler_func(process_message)
     )
 
     await app.run()
 
-async def process_message(message: object):
+async def process_message(message: BakePancakeCommand):
     print("I received a message!")
 
 if __name__ == "__main__":
     asyncio.run(run_message_app())
 ```
 
-
-## Sending new messages into Kafka
-Two ways exist to send new messages into Kafka: by return values and by context.
-
-
-### Sending messages by return value
-When a handler returns a value, the value is assumed to be a message and will be sent to Kafka. This approach provides the simplest way to send responses by messaging:
-
+## Defining messages
+Messages in this app are pydantic models, marked as messages. The following code shows an example message:
 ```python
-from pydantic import BaseModel
-
-from messaging import MessageTopic, message
-
-@message(MessageTopic.VILLAGERS)
-class MessageHandledEvent():
-    message: str
-
-async def process_message(message: object) -> MessageHandledEvent:
-    print("I received a message!")
-
-    # This message will be published to Kafka to MessageTopic.VILLAGERS
-    return MessageHandledEvent(message="The message was handled")
+@message(MessageTopic.PANCAKES)
+class BakePancakesCommand(BaseModel):
+    command_id: uuid.UUID
 ```
 
-
-### Sending messages by context
-Alternatively, the handler function can accept a second argument `MessageContext`. This allows multiple messages to be sent from a single handler:
-
-```python
-from pydantic import BaseModel
-
-from messaging.handler import MessageContext
-from messaging import MessageTopic, message
-
-@message(MessageTopic.VILLAGERS)
-class MessageHandledEvent():
-    message: str
-
-async def process_message(message: object, context: MessageContext) -> None:
-    print("I received a message!")
-
-    # This message will be published to Kafka to MessageTopic.VILLAGERS
-    context.publish(MessageHandledEvent(message="The message was handled"))
-```
-
-
-Type hints must be used, as they are required to inject the message and context into the handler. The order is also important: the message always comes first and the context always comes second. The context is optional and can be omitted.
-
+This model works the same as any other pydantic model without restrictions. The `@message()` decorator ensures that the model can be serialized and specifies which topic it belongs to. It is assumed that each type of message belongs in a single topic.
 
 ## Conventions for handlers
 A handler is a function that matches one of the following type descriptions:
@@ -140,6 +108,53 @@ async def process_message(message: object, context: MessageContext) -> None:
     .add_handler_func(process_message, accept_all_messages)
 )
 ```
+
+## Sending new messages into Kafka
+Two ways exist to send new messages into Kafka: by return values and by context.
+
+
+### Sending messages by return value
+When a handler returns a value, the value is assumed to be a message and will be sent to Kafka. This approach provides the simplest way to send responses by messaging:
+
+```python
+from pydantic import BaseModel
+
+from messaging import MessageTopic, message
+
+@message(MessageTopic.VILLAGERS)
+class MessageHandledEvent(BaseModel):
+    message: str
+
+async def process_message(message: object) -> MessageHandledEvent:
+    print("I received a message!")
+
+    # This message will be published to Kafka to MessageTopic.VILLAGERS
+    return MessageHandledEvent(message="The message was handled")
+```
+
+
+### Sending messages by context
+Alternatively, the handler function can accept a second argument `MessageContext`. This allows multiple messages to be sent from a single handler:
+
+```python
+from pydantic import BaseModel
+
+from messaging.handler import MessageContext
+from messaging import MessageTopic, message
+
+@message(MessageTopic.VILLAGERS)
+class MessageHandledEvent(BaseModel):
+    message: str
+
+async def process_message(message: object, context: MessageContext) -> None:
+    print("I received a message!")
+
+    # This message will be published to Kafka to MessageTopic.VILLAGERS
+    context.publish(MessageHandledEvent(message="The message was handled"))
+```
+
+
+Type hints must be used, as they are required to inject the message and context into the handler. The order is also important: the message always comes first and the context always comes second. The context is optional and can be omitted.
 
 
 ## Multiple handlers

@@ -1,15 +1,17 @@
-"""Workspace-local start module for the import worker.
+import asyncio
+import logging
 
-This module lives inside the `import_worker` package so editors and tooling
-can find it. Call `python start_import_worker.py` from the workspace root to
-run the wrapper which delegates to this module.
-"""
+from import_worker import app
 
-from .main import run
+
+def configure_logging() -> None:
+    logging.basicConfig(level=logging.WARNING)
+    logging.getLogger("import_worker.app").setLevel(logging.DEBUG)
 
 
 def main() -> None:
-    run()
+    configure_logging()
+    asyncio.run(app.execute())
 
 
 if __name__ == "__main__":

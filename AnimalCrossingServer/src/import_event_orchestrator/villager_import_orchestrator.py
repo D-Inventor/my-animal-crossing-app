@@ -2,7 +2,6 @@ import logging
 
 from import_event_orchestrator.db.saga_repository import SagaRepository
 from import_event_orchestrator.db.saga_state import SagaState, SagaStatus
-from messaging.handler import MessageDispatcher
 from messaging.handler.handler_endpoint import MessageContext
 from messaging.imports.commands import (
     DownloadVillagerSnapshotCommand,

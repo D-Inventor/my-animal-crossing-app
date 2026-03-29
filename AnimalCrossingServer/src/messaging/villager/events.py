@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
-from messaging.topics import MessageTopic, map_to_topic
+from messaging import MessageTopic, message
 
 
-@map_to_topic(MessageTopic.VILLAGERS)
+@message(MessageTopic.VILLAGERS)
 class VillagerCreated(BaseModel):
     id: str

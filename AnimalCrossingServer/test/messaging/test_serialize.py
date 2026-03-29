@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel
 
-from messaging.serialize import MessageSerialize
+from messaging import MessageSerialize
 
 
 class EmptyModel(BaseModel):

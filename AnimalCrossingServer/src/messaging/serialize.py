@@ -61,17 +61,14 @@ class MessageSerialize:
             return ValidationError(type_name=type_name, fields=model_payload)
 
 
-def create_default_serializer() -> MessageSerialize:
-    serializer = MessageSerialize()
-    from messaging.imports.commands import (
-        DownloadVillagerSnapshotCommand,
-        ImportVillagersCommand,
-    )
-    from messaging.imports.events import VillagerSnapshotDownloadedEvent
-    from messaging.villager.events import VillagerCreated
+default_serializer = MessageSerialize()
 
-    serializer.register_type(ImportVillagersCommand)
-    serializer.register_type(DownloadVillagerSnapshotCommand)
-    serializer.register_type(VillagerSnapshotDownloadedEvent)
-    serializer.register_type(VillagerCreated)
-    return serializer
+
+def map_to_serializer(serializer: None | MessageSerialize = None):  # noqa: ANN201
+    serializer = serializer if serializer is not None else default_serializer
+
+    def decorator(cls):  # noqa: ANN001, ANN202
+        serializer.register_type(cls)
+        return cls
+
+    return decorator

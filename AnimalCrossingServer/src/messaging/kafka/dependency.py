@@ -4,9 +4,7 @@ from typing import Any, AsyncGenerator, AsyncIterator
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
 
-from messaging.config import KafkaSettings
-from messaging.serialize import create_default_serializer
-from messaging.topics import MessageTopic
+from messaging import KafkaSettings, MessageTopic, default_serializer
 
 from .kafka_message_dispatcher import KafkaMessageDispatcher
 
@@ -40,7 +38,7 @@ def _create_producer() -> AIOKafkaProducer:
     kafka_settings = KafkaSettings()
     producer = AIOKafkaProducer(
         bootstrap_servers=kafka_settings.bootstrap_server,
-        value_serializer=create_default_serializer().serialize,
+        value_serializer=default_serializer.serialize,
         enable_idempotence=True,
     )
     return producer
@@ -52,6 +50,6 @@ def _create_consumer(topics: list[MessageTopic], group_id: str) -> AIOKafkaConsu
         *[topic.value for topic in topics],
         bootstrap_servers=kafka_settings.bootstrap_server,
         group_id=group_id,
-        value_deserializer=create_default_serializer().deserialize,
+        value_deserializer=default_serializer.deserialize,
     )
     return consumer

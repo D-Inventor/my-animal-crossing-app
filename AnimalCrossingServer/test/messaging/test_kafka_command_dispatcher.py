@@ -7,11 +7,10 @@ from aiokafka import AIOKafkaConsumer, AIOKafkaProducer, ConsumerRecord
 from pydantic_core import from_json
 from testcontainers.kafka import KafkaContainer
 
+from messaging import MessageSerialize, MessageTopic
 from messaging.imports.commands import DownloadVillagerSnapshotCommand
 from messaging.kafka import KafkaMessageDispatcher
 from messaging.migrate import install_topics
-from messaging.serialize import MessageSerialize
-from messaging.topics import MessageTopic
 
 
 @pytest.fixture

@@ -2,8 +2,8 @@ import asyncio
 
 from aiokafka.admin import AIOKafkaAdminClient, NewTopic
 
-from messaging.config import KafkaSettings
-from messaging.topics import MessageTopic
+from .config import KafkaSettings
+from .topics import MessageTopic
 
 
 async def install_topics(bootstrap_servers: str) -> None:

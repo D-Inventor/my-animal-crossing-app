@@ -4,8 +4,8 @@ import pytest
 from aiokafka import AIOKafkaProducer
 from testcontainers.kafka import KafkaContainer
 
+from messaging import default_serializer
 from messaging.migrate import install_topics
-from messaging.serialize import create_default_serializer
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ async def kafka_producer(
 ) -> AsyncGenerator[AIOKafkaProducer, None]:
     producer = AIOKafkaProducer(
         bootstrap_servers=kafka_container.get_bootstrap_server(),
-        value_serializer=create_default_serializer().serialize,
+        value_serializer=default_serializer.serialize,
         enable_idempotence=True,
     )
     try:

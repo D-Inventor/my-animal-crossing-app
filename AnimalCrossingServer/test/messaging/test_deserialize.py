@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from messaging.serialize import (
+from messaging import (
     MalformedMessageError,
     MessageSerialize,
     UnknownJsonError,

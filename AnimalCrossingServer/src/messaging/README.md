@@ -11,9 +11,9 @@ The following example shows a minimal working app:
 ```python
 import asyncio
 
-from messaging.handler.handler_endpoint import accept_all_messages
+from messaging.handler import accept_all_messages
 from messaging.kafka import KafkaMessageHandlerApp
-from messaging.topics import MessageTopic
+from messaging import MessageTopic
 
 async def run_message_app():
     app = (
@@ -42,9 +42,9 @@ When a handler returns a value, the value is assumed to be a message and will be
 ```python
 from pydantic import BaseModel
 
-from messaging.topics import MessageTopic, map_to_topic
+from messaging import MessageTopic, message
 
-@map_to_topic(MessageTopic.VILLAGERS)
+@message(MessageTopic.VILLAGERS)
 class MessageHandledEvent():
     message: str
 
@@ -62,10 +62,10 @@ Alternatively, the handler function can accept a second argument `MessageContext
 ```python
 from pydantic import BaseModel
 
-from messaging.handler.handler_endpoint import MessageContext
-from messaging.topics import MessageTopic, map_to_topic
+from messaging.handler import MessageContext
+from messaging import MessageTopic, message
 
-@map_to_topic(MessageTopic.VILLAGERS)
+@message(MessageTopic.VILLAGERS)
 class MessageHandledEvent():
     message: str
 
@@ -111,7 +111,7 @@ To handle only specific messages, a filter can be added. The following example h
 If a handler only processes one specific type of message, a filter is not necessary, as long as the proper type hints are applied. The following handler automatically receives only messages of type `ExampleMessage`:
 
 ```python
-@map_to_topic(MessageTopic.VILLAGERS)
+@message(MessageTopic.VILLAGERS)
 class ExampleMessage(BaseModel):
     id: uuid.UUID
 

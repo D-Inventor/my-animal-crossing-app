@@ -1,6 +1,6 @@
 from aiokafka import AIOKafkaProducer
 
-from messaging.topics import get_topic
+from messaging import get_topic
 
 
 class KafkaMessageDispatcher:

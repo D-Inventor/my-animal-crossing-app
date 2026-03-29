@@ -16,8 +16,6 @@ async def kafka_consumer(
         value_deserializer=lambda m: from_json(m),
         auto_offset_reset="earliest",
     )
-    try:
-        await consumer.start()
+
+    async with consumer:
         yield consumer
-    finally:
-        await consumer.stop()

@@ -88,3 +88,17 @@ async def test_should_dispatch_result_messages_to_target():
     # then
     assert len(message_dispatcher.messages) == 1
     assert isinstance(message_dispatcher.messages[0], ExampleMessage)
+
+
+@pytest.mark.asyncio
+async def test_should_handle_exceptions_from_handlers():
+    # given
+    def failing_handler(message: object):
+        raise ValueError("This handler failed")
+
+    message_app = MessageHandlerApp(
+        FakeMessageSource([ExampleMessage()]), FakeMessageDispatcher(), failing_handler
+    )
+
+    # when / (then won't throw an exception)
+    await message_app.run()

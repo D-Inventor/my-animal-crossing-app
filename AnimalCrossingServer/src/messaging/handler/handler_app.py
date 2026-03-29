@@ -1,9 +1,12 @@
 import asyncio
 import contextvars
+import logging
 from contextlib import AsyncExitStack
 from typing import AsyncContextManager, AsyncIterable, Awaitable, Callable, Protocol
 
 from messaging.handler.handler_endpoint_collection import HandlerEndpointCollection
+
+logger = logging.getLogger(__name__)
 
 
 class MessageDispatcher(Protocol):
@@ -27,10 +30,15 @@ class MessageHandlerApp:
             target = await stack.enter_async_context(self.message_target)
             messages = await stack.enter_async_context(self.message_source)
             async for message in messages:
-                ctx = contextvars.copy_context()
+                try:
+                    ctx = contextvars.copy_context()
 
-                task = asyncio.create_task(self.handler(message), context=ctx)
+                    task = asyncio.create_task(self.handler(message), context=ctx)
 
-                responses = await task
-                for response in responses:
-                    await target.dispatch(response)
+                    responses = await task
+                    for response in responses:
+                        await target.dispatch(response)
+                except Exception as error:
+                    logger.error(
+                        "Something went wrong while handling a message", exc_info=error
+                    )

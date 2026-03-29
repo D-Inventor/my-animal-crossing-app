@@ -1,8 +1,10 @@
 # How to make Kafka message apps
-The messaging project contains the base components for creating apps that react to messages from kafka. A message app with kafka runs in three steps:
- 1. Decide which topics to listen to
+
+The messaging project contains the base components for creating apps that react to messages from Kafka. A message app with Kafka runs in three steps:
+ 1. Select which topics to listen to
  1. Assign handlers to handle messages
  1. Start the app
+
 
 The following example shows a minimal working app:
 
@@ -29,11 +31,13 @@ if __name__ == "__main__":
     asyncio.run(run_message_app())
 ```
 
-## Send new messages into kafka
-The app has two ways to send new messages into kafka: by return values and by context.
 
-### Send messages by return value
-When a handler returns a value, it is assumed to be a message and will be sent to kafka. This is the easiest way to send responses by messaging:
+## Sending new messages into Kafka
+Two ways exist to send new messages into Kafka: by return values and by context.
+
+
+### Sending messages by return value
+When a handler returns a value, the value is assumed to be a message and will be sent to Kafka. This approach provides the simplest way to send responses by messaging:
 
 ```python
 from pydantic import BaseModel
@@ -47,12 +51,13 @@ class MessageHandledEvent():
 async def process_message(message: object) -> MessageHandledEvent:
     print("I received a message!")
 
-    # This message will be published to kafka to MessageTopic.VILLAGERS
+    # This message will be published to Kafka to MessageTopic.VILLAGERS
     return MessageHandledEvent(message="The message was handled")
 ```
 
-### Send messages by context
-Alternatively, you can make the handler function accept a second argument `MessageContext`. This allows you to send multiple messages from a single handler:
+
+### Sending messages by context
+Alternatively, the handler function can accept a second argument `MessageContext`. This allows multiple messages to be sent from a single handler:
 
 ```python
 from pydantic import BaseModel
@@ -67,11 +72,13 @@ class MessageHandledEvent():
 async def process_message(message: object, context: MessageContext) -> None:
     print("I received a message!")
 
-    # This message will be published to kafka to MessageTopic.VILLAGERS
+    # This message will be published to Kafka to MessageTopic.VILLAGERS
     context.publish(MessageHandledEvent(message="The message was handled"))
 ```
 
-Make sure that you use the type hints. The type hints are used to inject the message and context into the handler. The order is also important: the message always comes first and the context always comes second. The context is optional and can be omitted.
+
+Type hints must be used, as they are required to inject the message and context into the handler. The order is also important: the message always comes first and the context always comes second. The context is optional and can be omitted.
+
 
 ## Conventions for handlers
 A handler is a function that matches one of the following type descriptions:
@@ -86,10 +93,12 @@ AsyncHandlerFunction = Callable[[T], Awaitable[None | object]]
     | Callable[[T, MessageContext], Awaitable[None | object]]
 ```
 
+
 The type T can be any type of message or `object`.
 
+
 ## Filtering
-If you're only interested in specific messages, you can add a filter. The following example only handles messages that have a property `my_property`:
+To handle only specific messages, a filter can be added. The following example handles only messages that have a property `my_property`:
 
 ```python
 (
@@ -98,14 +107,16 @@ If you're only interested in specific messages, you can add a filter. The follow
 )
 ```
 
-If your handler only handles one specific type of message, a filter is not necessary, as long as you apply the proper type hints. The following handler automatically receives only messages of type `ExampleMessage`:
+
+If a handler only processes one specific type of message, a filter is not necessary, as long as the proper type hints are applied. The following handler automatically receives only messages of type `ExampleMessage`:
 
 ```python
 @map_to_topic(MessageTopic.VILLAGERS)
 class ExampleMessage(BaseModel):
     id: uuid.UUID
 
-# 👇 This function only receives messages of type ExampleMessage
+
+# This function only receives messages of type ExampleMessage
 async def process_message(message: ExampleMessage):
     print("I just received an ExampleMessage")
 
@@ -116,7 +127,8 @@ async def process_message(message: ExampleMessage):
 )
 ```
 
-If your handler can handle all messages, you can pass the wildcard filter `accept_all_messages`:
+
+To handle all messages, the wildcard filter `accept_all_messages` can be passed:
 
 ```python
 async def process_message(message: object, context: MessageContext) -> None:
@@ -129,8 +141,9 @@ async def process_message(message: object, context: MessageContext) -> None:
 )
 ```
 
+
 ## Multiple handlers
-You can register multiple handlers. All handlers that match the incoming message by their filter will be invoked in the order in which they are registered:
+Multiple handlers can be registered. All handlers that match the incoming message by their filter will be invoked in the order in which they are registered:
 
 ```python
 (
@@ -140,10 +153,12 @@ You can register multiple handlers. All handlers that match the incoming message
 )
 ```
 
+
 In this case, both handlers will handle all messages.
 
+
 ## Dependencies
-The handler is responsible for its own dependencies. This chapter outlines the common patterns for dependency management that are used in this project. There are two common types of dependencies in an app: Singleton and Scoped. Singleton dependencies are initialized once and reused for every message. They live until the app stops. Scoped services are initialized for each message and each handler and live until the handler has finished handling the message.
+Handlers are responsible for their own dependencies. This chapter outlines the common patterns for dependency management that are used in this project. Two common types of dependencies exist in an app: Singleton and Scoped. Singleton dependencies are initialized once and reused for every message, living until the app stops. Scoped services are initialized for each message and each handler, and live until the handler has finished handling the message.
 
 The following example demonstrates both types of dependencies and demonstrates how the lifetime of each dependency is managed.
 
@@ -203,16 +218,21 @@ if __name__ == "__main__":
     asyncio.run(run_message_app())
 ```
 
-Notice the generic nature of the handler factory. Alternative implementations are possible with dependency injection frameworks as long as the result follows the conventions for handler functions.
+
+The generic nature of the handler factory allows for alternative implementations with dependency injection frameworks, as long as the result follows the conventions for handler functions.
+
 
 ## Limitations
 Message apps in this project have the following known limitations:
 
+
 ### Not atomic
 Messaging is not atomic and dispatch of messages is not guaranteed. It is also not guaranteed that messages are cancelled when an error occurs inside a handler.
 
+
 ### Not optimized for high throughput
-Though the message app is optimized for async, it only handles one message at a time. The app does not run anything concurrently.
+Only one message is handled at a time. The app does not run anything concurrently.
+
 
 ### Not optimized for robustness
 Handlers are responsible for their own resilience. The app only catches errors and logs them.

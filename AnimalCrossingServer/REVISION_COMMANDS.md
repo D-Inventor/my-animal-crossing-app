@@ -14,6 +14,11 @@ api-db-revision -m "your revision message"
 import-event-orchestrator-db-revision -m "your revision message"
 ```
 
+## Import Worker
+```bash
+import-worker-db-revision -m "your revision message"
+```
+
 ## Optional: autogenerate
 
 ```bash

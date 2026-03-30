@@ -25,4 +25,4 @@ COPY --chown=appuser:appgroup src/messaging src/messaging
 COPY --chown=appuser:appgroup src/db src/db
 
 USER appuser
-ENTRYPOINT ["sh", "-c", "messaging-migrate && exec import-worker"]
+ENTRYPOINT ["sh", "-c", "messaging-migrate && import-worker-migrate && exec import-worker"]

@@ -46,7 +46,7 @@ def test_should_compare_with_other_utcdatetime():
     assert utcnowfirst == utcnowsecond
 
 
-def test_should_create_villager_with_given_date():
+def test_should_create_snapshot_with_given_date():
     # given / when
     now = UtcDatetime(datetime(2026, 3, 29, 12, 0, 0, 0, timezone.utc))
     entity = VillagerSnapshot.create(now)

@@ -1,8 +1,8 @@
 """Create initial tables
 
-Revision ID: 244e5af74928
+Revision ID: 0d5f57d07c67
 Revises:
-Create Date: 2026-03-30 19:24:35.857404
+Create Date: 2026-04-02 20:07:10.354619
 
 """
 
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "244e5af74928"
+revision: str = "0d5f57d07c67"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,7 +33,50 @@ def upgrade() -> None:
         sa.Column("id", sa.String(length=64), nullable=False),
         sa.Column("snapshot_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("checksum", sa.Integer(), nullable=False),
+        sa.Column("url", sa.String(length=512), nullable=False),
+        sa.Column(
+            "species",
+            sa.Enum(
+                "ALLIGATOR",
+                "ANTEATER",
+                "BEAR",
+                "BEAR_CUB",
+                "BIRD",
+                "BULL",
+                "CAT",
+                "CHICKEN",
+                "COW",
+                "DEER",
+                "DOG",
+                "DUCK",
+                "EAGLE",
+                "ELEPHANT",
+                "FROG",
+                "GOAT",
+                "GORILLA",
+                "HAMSTER",
+                "HIPPO",
+                "HORSE",
+                "KANGAROO",
+                "KOALA",
+                "LION",
+                "MONKEY",
+                "MOUSE",
+                "OCTOPUS",
+                "OSTRICH",
+                "PENGUIN",
+                "PIG",
+                "RABBIT",
+                "RHINOCEROS",
+                "SHEEP",
+                "SQUIRREL",
+                "TIGER",
+                "WOLF",
+                name="villagerspecies",
+            ),
+            nullable=False,
+        ),
+        sa.Column("checksum", sa.BigInteger(), nullable=False),
         sa.ForeignKeyConstraint(
             ["snapshot_id"],
             ["villager_snapshots.id"],

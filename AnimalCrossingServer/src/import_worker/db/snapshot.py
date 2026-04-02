@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from enum import Enum
 from typing import Self
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import BigInteger, ForeignKey, String
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -30,6 +32,44 @@ class UtcDatetime:
         return self.datetime == value
 
 
+class VillagerSpecies(Enum):
+    ALLIGATOR = "Alligator"
+    ANTEATER = "Anteater"
+    BEAR = "Bear"
+    BEAR_CUB = "Bear cub"
+    BIRD = "Bird"
+    BULL = "Bull"
+    CAT = "Cat"
+    CHICKEN = "Chicken"
+    COW = "Cow"
+    DEER = "Deer"
+    DOG = "Dog"
+    DUCK = "Duck"
+    EAGLE = "Eagle"
+    ELEPHANT = "Elephant"
+    FROG = "Frog"
+    GOAT = "Goat"
+    GORILLA = "Gorilla"
+    HAMSTER = "Hamster"
+    HIPPO = "Hippo"
+    HORSE = "Horse"
+    KANGAROO = "Kangaroo"
+    KOALA = "Koala"
+    LION = "Lion"
+    MONKEY = "Monkey"
+    MOUSE = "Mouse"
+    OCTOPUS = "Octopus"
+    OSTRICH = "Ostrich"
+    PENGUIN = "Penguin"
+    PIG = "Pig"
+    RABBIT = "Rabbit"
+    RHINOCEROS = "Rhinoceros"
+    SHEEP = "Sheep"
+    SQUIRREL = "Squirrel"
+    TIGER = "Tiger"
+    WOLF = "Wolf"
+
+
 class VillagerSnapshot(Base):
     __tablename__ = "villager_snapshots"
     id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -51,4 +91,8 @@ class VillagerSnapshotVillager(Base):
         ForeignKey("villager_snapshots.id"), primary_key=True
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    checksum: Mapped[int] = mapped_column(nullable=False)
+    url: Mapped[str] = mapped_column(String(512), nullable=False)
+    species: Mapped[VillagerSpecies] = mapped_column(
+        SQLEnum(VillagerSpecies), nullable=False
+    )
+    checksum: Mapped[int] = mapped_column(BigInteger(), nullable=False)

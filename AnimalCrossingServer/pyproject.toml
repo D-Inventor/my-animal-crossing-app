@@ -26,7 +26,8 @@ dev = [
     "ruff",
     "testcontainers",
     "httpx",
-    "asgi-lifespan"
+    "asgi-lifespan",
+    "Faker"
 ]
 
 [tool.setuptools.packages.find]

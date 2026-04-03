@@ -5,6 +5,7 @@ class MessageTopic(str, Enum):
     VILLAGERS = "villagers"
     IMPORT_EVENTS = "import_events"
     IMPORT_COMMANDS = "import_commands"
+    IMPORT_ORCHESTRATOR_COMMANDS = "import_orchestrator_commands"
 
 
 _registered_message_types = dict[type, MessageTopic]()

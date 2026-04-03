@@ -31,12 +31,14 @@ class MessageHandlerApp:
             messages = await stack.enter_async_context(self.message_source)
             async for message in messages:
                 try:
+                    logger.info("received message %s", message)
                     ctx = contextvars.copy_context()
 
                     task = asyncio.create_task(self.handler(message), context=ctx)
 
                     responses = await task
                     for response in responses:
+                        logger.info("dispatch message %s", response)
                         await target.dispatch(response)
                 except Exception as error:
                     logger.error(

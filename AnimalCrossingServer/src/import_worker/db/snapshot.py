@@ -23,7 +23,7 @@ class UtcDatetime:
 
     @classmethod
     def now(cls) -> UtcDatetime:
-        UtcDatetime(datetime=datetime.now(timezone.utc))
+        return UtcDatetime(datetime=datetime.now(timezone.utc))
 
     def __add__(self, other: timedelta) -> UtcDatetime:
         return UtcDatetime(datetime=self.datetime + other)

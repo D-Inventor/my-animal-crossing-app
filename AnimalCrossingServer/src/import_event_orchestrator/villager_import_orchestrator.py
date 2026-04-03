@@ -7,7 +7,10 @@ from messaging.imports.commands import (
     DownloadVillagerSnapshotCommand,
     ImportVillagersCommand,
 )
-from messaging.imports.events import VillagerSnapshotDownloadedEvent
+from messaging.imports.events import (
+    VillagerSnapshotDownloadedEvent,
+    VillagerSnapshotDownloadFailedEvent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +25,8 @@ class VillagerImportOrchestrator:
                 await self._handle_import_villagers_command(command, context)
             case VillagerSnapshotDownloadedEvent() as event:
                 await self._handle_villager_snapshot_downloaded_event(event)
+            case VillagerSnapshotDownloadFailedEvent() as event:
+                await self._handle_villager_snapshot_download_failed_event(event)
             case _:
                 self._log_ignored_message(message)
 
@@ -45,6 +50,18 @@ class VillagerImportOrchestrator:
             return
         saga.state = SagaStatus.COMPLETED
         logger.debug("completed import saga %s", event.saga_id)
+
+    async def _handle_villager_snapshot_download_failed_event(
+        self, event: VillagerSnapshotDownloadFailedEvent
+    ) -> None:
+        saga = await self.saga_repository.get(event.saga_id)
+        if saga is None:
+            logger.debug(
+                "ignored download failed event for missing saga %s", event.saga_id
+            )
+            return
+        saga.state = SagaStatus.FAILED
+        logger.debug("failed import saga %s", event.saga_id)
 
     def _log_ignored_message(self, message: object) -> None:
         logger.debug("ignored unknown message: %s", type(message).__name__)

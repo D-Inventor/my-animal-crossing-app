@@ -47,6 +47,7 @@ services:
       DB_USERNAME: ac_user
       DB_PASSWORD_FILE: /run/secrets/db_user_password
       DB_DATABASE: animal_crossing
+      NOOKIPEDIA_BASE_URL: https://nookipedia.com/
       KAFKA_BOOTSTRAP_SERVER: kafka:9092
       # TELEMETRY_ENABLED: "false"
       # TELEMETRY_EXPORTER_ENDPOINT: "http://otel-collector:4317"

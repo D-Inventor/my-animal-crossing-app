@@ -29,7 +29,9 @@ async def execute() -> None:
 
         app = (
             KafkaMessageHandlerApp("import-event-orchestrator")
-            .add_topics([MessageTopic.IMPORT_COMMANDS, MessageTopic.IMPORT_EVENTS])
+            .add_topics(
+                [MessageTopic.IMPORT_ORCHESTRATOR_COMMANDS, MessageTopic.IMPORT_EVENTS]
+            )
             .add_handler_func(
                 create_message_processor(session_maker), accept_all_messages
             )

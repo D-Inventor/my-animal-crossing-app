@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from messaging import MessageTopic, message
 
 
-@message(MessageTopic.IMPORT_COMMANDS)
+@message(MessageTopic.IMPORT_ORCHESTRATOR_COMMANDS)
 class ImportVillagersCommand(BaseModel):
     id: uuid.UUID
 

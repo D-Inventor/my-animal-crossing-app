@@ -24,6 +24,11 @@ async def install_topics(bootstrap_servers: str) -> None:
                 NewTopic(
                     MessageTopic.IMPORT_COMMANDS, num_partitions=1, replication_factor=1
                 ),
+                NewTopic(
+                    MessageTopic.IMPORT_ORCHESTRATOR_COMMANDS,
+                    num_partitions=1,
+                    replication_factor=1,
+                ),
             ]
         )
         print("[messaging.migrate] Topics created successfully")

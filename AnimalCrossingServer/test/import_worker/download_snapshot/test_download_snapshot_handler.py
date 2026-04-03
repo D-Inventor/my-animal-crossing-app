@@ -22,7 +22,9 @@ from import_worker.download_snapshot.client import (
 )
 from import_worker.download_snapshot.handler import handle
 from messaging.imports.commands import DownloadVillagerSnapshotCommand
-from messaging.imports.events import VillagerSnapshotDownloadedEvent
+from messaging.imports.events import (
+    VillagerSnapshotDownloadFailedEvent,
+)
 
 
 @pytest.fixture(scope="session")
@@ -72,13 +74,19 @@ class FakeVillagerAPI:
         )
 
 
+class FailureVillagerAPIStub:
+    async def get_villagers(self, request: VillagersRequest) -> VillagersResponse:
+        raise ValueError("Something went wrong")
+
+
 @pytest.mark.asyncio
 async def test_should_create_snapshot(session_maker):
     # given
     command = DownloadVillagerSnapshotCommand(saga_id=uuid.uuid4())
 
     # when
-    result = await handle(command, clock, session_maker, FakeVillagerAPI())
+    async with session_maker() as session:
+        result = await handle(command, clock, session, FakeVillagerAPI())
 
     # then
     async with session_maker() as session:
@@ -95,7 +103,8 @@ async def test_should_fetch_all_villagers(session_maker, amount):
     api = FakeVillagerAPI(amount)
 
     # when
-    result = await handle(command, clock, session_maker, api)
+    async with session_maker() as session:
+        result = await handle(command, clock, session, api)
 
     # then
     async with session_maker() as session:
@@ -112,3 +121,19 @@ async def test_should_fetch_all_villagers(session_maker, amount):
         )
 
         assert len(snapshot_villagers) == amount
+
+
+@pytest.mark.asyncio
+@pytest.mark.slow
+async def test_should_return_failure_when_api_fails_to_fetch(session_maker):
+    # given
+    command = DownloadVillagerSnapshotCommand(saga_id=uuid.uuid4())
+    api = FailureVillagerAPIStub()
+
+    # when
+    async with session_maker() as session:
+        result = await handle(command, clock, session, api)
+
+    # then
+    assert isinstance(result, VillagerSnapshotDownloadFailedEvent)
+    assert result.saga_id == command.saga_id

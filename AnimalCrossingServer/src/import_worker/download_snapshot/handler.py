@@ -1,9 +1,10 @@
+import logging
 import zlib
 from typing import Callable
 from uuid import UUID
 
 from pydantic_core import to_json
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from import_worker.db.snapshot import (
     UtcDatetime,
@@ -17,49 +18,56 @@ from import_worker.download_snapshot.client import (
     VillagersResponseItemData,
 )
 from messaging.imports.commands import DownloadVillagerSnapshotCommand
-from messaging.imports.events import VillagerSnapshotDownloadedEvent
+from messaging.imports.events import (
+    VillagerSnapshotDownloadedEvent,
+    VillagerSnapshotDownloadFailedEvent,
+)
+
+logger = logging.getLogger(__name__)
 
 
 async def handle(
     message: DownloadVillagerSnapshotCommand,
     clock: Callable[[], UtcDatetime],
-    session_maker: async_sessionmaker[AsyncSession],
+    session: AsyncSession,
     villager_api: VillagersAPIProtocol,
-) -> VillagerSnapshotDownloadedEvent:
-    async with session_maker() as session:
+) -> VillagerSnapshotDownloadedEvent | VillagerSnapshotDownloadFailedEvent:
+    try:
         snapshot = VillagerSnapshot.create(clock())
         session.add(snapshot)
-        await session.commit()
+        await session.flush()
 
-    # Downloading is funny: we don't know how many villagers
-    #   exist until we've fetched them all
-    offset = 0
-    limit = 100
-    while True:
-        response = await villager_api.get_villagers(
-            VillagersRequest(limit=limit, offset=offset)
-        )
+        # Downloading is funny: we don't know how many villagers
+        #   exist until we've fetched them all
+        offset = 0
+        limit = 100
+        while True:
+            response = await villager_api.get_villagers(
+                VillagersRequest(limit=limit, offset=offset)
+            )
 
-        async with session_maker() as session:
             villagers = [
                 map_to_entity(item.title, snapshot.id) for item in response.cargoquery
             ]
             session.add_all(villagers)
-            await session.commit()
+            await session.flush()
+            session.expunge_all()
 
-        if len(response.cargoquery) < limit:
-            break
-        else:
-            offset += limit
+            if len(response.cargoquery) < limit:
+                break
+            else:
+                offset += limit
 
-    async with session_maker() as session:
         snapshot = await session.get(VillagerSnapshot, snapshot.id)
         snapshot.finish(clock())
         await session.commit()
 
-    return VillagerSnapshotDownloadedEvent(
-        saga_id=message.saga_id, snapshot_id=snapshot.id
-    )
+        return VillagerSnapshotDownloadedEvent(
+            saga_id=message.saga_id, snapshot_id=snapshot.id
+        )
+    except Exception as e:
+        logger.error("failed to download snapshot", exc_info=e)
+        return VillagerSnapshotDownloadFailedEvent(saga_id=message.saga_id)
 
 
 def map_to_entity(

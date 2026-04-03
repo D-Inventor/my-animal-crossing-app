@@ -12,7 +12,10 @@ from messaging.imports.commands import (
     DownloadVillagerSnapshotCommand,
     ImportVillagersCommand,
 )
-from messaging.imports.events import VillagerSnapshotDownloadedEvent
+from messaging.imports.events import (
+    VillagerSnapshotDownloadedEvent,
+    VillagerSnapshotDownloadFailedEvent,
+)
 from test.import_event_orchestrator.doubles import (
     InMemorySagaRepository,
 )
@@ -100,7 +103,7 @@ async def test_should_ignore_unfamiliar_message_type() -> None:
 
 
 @pytest.mark.asyncio
-async def test_should_handle_missing_saga_gracefully() -> None:
+async def test_should_handle_missing_saga_gracefully_on_finished_download() -> None:
     # given
     saga_repository, orchestrator = create_orchestrator()
     event = VillagerSnapshotDownloadedEvent(saga_id=uuid4(), snapshot_id=uuid4())
@@ -112,6 +115,36 @@ async def test_should_handle_missing_saga_gracefully() -> None:
     # then
     assert saga_repository.added_saga is None
     assert len(context.published_messages()) == 0
+
+
+@pytest.mark.asyncio
+async def test_should_mark_saga_as_failure_when_download_fails() -> None:
+    # given
+    saga_repository, orchestrator = create_orchestrator()
+    saga_id = uuid4()
+    saga_repository.added_saga = SagaState.create(id=saga_id)
+    event = VillagerSnapshotDownloadFailedEvent(saga_id=saga_id, snapshot_id=uuid4())
+
+    # when
+    await orchestrator.handle(event, MessageContext())
+
+    # then
+    assert saga_repository.added_saga is not None
+    assert saga_repository.added_saga.state == SagaStatus.FAILED
+
+
+@pytest.mark.asyncio
+async def test_should_handle_missing_saga_gracefully_on_failed_download() -> None:
+    # given
+    saga_repository, orchestrator = create_orchestrator()
+    event = VillagerSnapshotDownloadFailedEvent(saga_id=uuid4())
+    context = MessageContext()
+
+    # when
+    await orchestrator.handle(event, context)
+
+    # then
+    assert saga_repository.added_saga is None
 
 
 @pytest.mark.asyncio

@@ -31,16 +31,26 @@ class MessageHandlerApp:
             messages = await stack.enter_async_context(self.message_source)
             async for message in messages:
                 try:
-                    logger.info("received message %s", message)
+                    log_received_message(message)
                     ctx = contextvars.copy_context()
 
                     task = asyncio.create_task(self.handler(message), context=ctx)
 
                     responses = await task
                     for response in responses:
-                        logger.info("dispatch message %s", response)
+                        log_dispatch_message(response)
                         await target.dispatch(response)
                 except Exception as error:
-                    logger.error(
-                        "Something went wrong while handling a message", exc_info=error
-                    )
+                    log_message_error(error)
+
+
+def log_message_error(error: Exception) -> None:
+    logger.error("Something went wrong while handling a message", exc_info=error)
+
+
+def log_dispatch_message(response: object) -> None:
+    logger.info("dispatch message %s: %s", type(response).__name__, response)
+
+
+def log_received_message(message: object) -> None:
+    logger.info("received message %s: %s", type(message).__name__, message)

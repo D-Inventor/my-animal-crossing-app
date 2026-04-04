@@ -14,3 +14,10 @@ class VillagerSnapshotDownloadedEvent(BaseModel):
 @message(MessageTopic.IMPORT_EVENTS)
 class VillagerSnapshotDownloadFailedEvent(BaseModel):
     saga_id: uuid.UUID
+
+
+@message(MessageTopic.IMPORT_EVENTS)
+class DiffCreatedEvent(BaseModel):
+    saga_id: uuid.UUID
+    diff_id: uuid.UUID
+    differences_found: bool

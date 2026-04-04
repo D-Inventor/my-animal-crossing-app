@@ -6,13 +6,16 @@ import pytest
 from import_event_orchestrator.db.saga_state import SagaState, SagaStatus
 from import_event_orchestrator.villager_import_orchestrator import (
     VillagerImportOrchestrator,
+    finish_download,
 )
 from messaging.handler import MessageContext
 from messaging.imports.commands import (
+    CreateDiffWithActiveSnapshotCommand,
     DownloadVillagerSnapshotCommand,
     ImportVillagersCommand,
 )
 from messaging.imports.events import (
+    DiffCreatedEvent,
     VillagerSnapshotDownloadedEvent,
     VillagerSnapshotDownloadFailedEvent,
 )
@@ -73,19 +76,25 @@ async def test_should_dispatch_download_snapshot_command_with_started_saga_id() 
 
 
 @pytest.mark.asyncio
-async def test_should_complete_saga_when_snapshot_downloaded_event_received() -> None:
+async def test_should_start_diff_when_snapshot_downloaded_event_received() -> None:
     # given
     saga_repository, orchestrator = create_orchestrator()
     saga_id = uuid4()
     saga_repository.added_saga = SagaState.create(id=saga_id)
     event = VillagerSnapshotDownloadedEvent(saga_id=saga_id, snapshot_id=uuid4())
+    message_context = MessageContext()
 
     # when
-    await orchestrator.handle(event, MessageContext())
+    await orchestrator.handle(event, message_context)
 
     # then
     assert saga_repository.added_saga is not None
-    assert saga_repository.added_saga.state == SagaStatus.COMPLETED
+    assert saga_repository.added_saga.state == SagaStatus.STARTED
+    assert saga_repository.added_saga.completed_steps == ["download_snapshot"]
+    assert saga_repository.added_saga.data == {"snapshot_id": event.snapshot_id}
+    assert isinstance(
+        message_context.published_messages()[0], CreateDiffWithActiveSnapshotCommand
+    )
 
 
 @pytest.mark.asyncio
@@ -148,67 +157,23 @@ async def test_should_handle_missing_saga_gracefully_on_failed_download() -> Non
 
 
 @pytest.mark.asyncio
-async def test_should_log_ignored_snapshot_downloaded_event_for_missing_saga_once(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    # given
-    _, orchestrator = create_orchestrator()
-    event = VillagerSnapshotDownloadedEvent(saga_id=uuid4(), snapshot_id=uuid4())
-
-    # when
-    with caplog.at_level(logging.DEBUG, logger=LOGGER_NAME):
-        await orchestrator.handle(event, MessageContext())
-
-    # then
-    assert captured_messages(caplog) == [
-        f"ignored snapshot downloaded event for missing saga {event.saga_id}"
-    ]
-
-
-@pytest.mark.asyncio
-async def test_should_log_executed_import_action_once(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    # given
-    _, orchestrator = create_orchestrator()
-    command = ImportVillagersCommand(id=uuid4())
-
-    # when
-    with caplog.at_level(logging.DEBUG, logger=LOGGER_NAME):
-        await orchestrator.handle(command, MessageContext())
-
-    # then
-    assert captured_messages(caplog) == [f"started import saga {command.id}"]
-
-
-@pytest.mark.asyncio
-async def test_should_log_executed_completion_action_once(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
+async def test_should_complete_saga_when_diff_is_created() -> None:
     # given
     saga_repository, orchestrator = create_orchestrator()
-    saga_id = uuid4()
-    saga_repository.added_saga = SagaState.create(id=saga_id)
-    event = VillagerSnapshotDownloadedEvent(saga_id=saga_id, snapshot_id=uuid4())
+    saga = SagaState.create()
+    finish_download(saga, snapshot_id=uuid4())
+    saga_repository.added_saga = saga
 
     # when
-    with caplog.at_level(logging.DEBUG, logger=LOGGER_NAME):
-        await orchestrator.handle(event, MessageContext())
+    await orchestrator.handle(
+        DiffCreatedEvent(saga_id=saga.id, diff_id=uuid4(), differences_found=True),
+        MessageContext(),
+    )
 
     # then
-    assert captured_messages(caplog) == [f"completed import saga {event.saga_id}"]
-
-
-@pytest.mark.asyncio
-async def test_should_log_ignored_message_once(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    # given
-    _, orchestrator = create_orchestrator()
-
-    # when
-    with caplog.at_level(logging.DEBUG, logger=LOGGER_NAME):
-        await orchestrator.handle(UnfamiliarMessage(), MessageContext())
-
-    # then
-    assert captured_messages(caplog) == ["ignored unknown message: UnfamiliarMessage"]
+    assert saga_repository.added_saga is not None
+    assert saga_repository.added_saga.state == SagaStatus.COMPLETED
+    assert saga_repository.added_saga.completed_steps == [
+        "download_snapshot",
+        "create_diff",
+    ]

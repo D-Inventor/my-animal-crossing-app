@@ -4,7 +4,7 @@ from enum import Enum
 from typing import Self
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, ForeignKey, String
+from sqlalchemy import BigInteger, ForeignKey, String, UniqueConstraint
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -96,3 +96,53 @@ class VillagerSnapshotVillager(Base):
         SQLEnum(VillagerSpecies), nullable=False
     )
     checksum: Mapped[int] = mapped_column(BigInteger(), nullable=False)
+
+
+class DiffChange(Enum):
+    ADDED = "added"
+    UPDATED = "updated"
+    DELETED = "deleted"
+
+
+class VillagerSnapshotDiff(Base):
+    __tablename__ = "villager_snapshot_diff"
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    source: Mapped[UUID] = mapped_column(
+        ForeignKey("villager_snapshots.id"), nullable=True
+    )
+    target: Mapped[UUID] = mapped_column(ForeignKey("villager_snapshots.id"))
+    __table_args__ = (UniqueConstraint("source", "target"),)
+
+    @classmethod
+    def create(cls, source: UUID | None, target: UUID) -> Self:
+        return VillagerSnapshotDiff(id=uuid4(), source=source, target=target)
+
+
+class VillagerSnapshotDiffItems(Base):
+    __tablename__ = "villager_snapshot_diff_items"
+    diff_id: Mapped[UUID] = mapped_column(
+        ForeignKey("villager_snapshot_diff.id"), primary_key=True
+    )
+    villager_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    change: Mapped[DiffChange] = mapped_column(SQLEnum(DiffChange), nullable=False)
+
+
+class VillagerSnapshotActivation(Base):
+    __tablename__ = "villager_snapshot_activations"
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    source: Mapped[UUID] = mapped_column(
+        ForeignKey("villager_snapshots.id"), nullable=True
+    )
+    target: Mapped[UUID] = mapped_column(ForeignKey("villager_snapshots.id"))
+    started_on: Mapped[datetime] = mapped_column(nullable=False)
+    finished_on: Mapped[datetime] = mapped_column(nullable=True)
+
+    @classmethod
+    def create(
+        cls, source: UUID | None, target: UUID, now: UtcDatetime
+    ) -> VillagerSnapshotActivation:
+        return cls(id=uuid4(), source=source, target=target, started_on=now.datetime)
+
+    def finish(self, now: UtcDatetime) -> VillagerSnapshotActivation:
+        self.finished_on = now.datetime
+        return self

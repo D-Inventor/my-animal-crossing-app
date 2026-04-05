@@ -1,10 +1,13 @@
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
 from enum import Enum
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator
 
 import httpx
 import pytest
+from sqlalchemy.ext.asyncio import async_sessionmaker
+
+from import_worker.db.snapshot import Base
 
 
 class HttpMethod(str, Enum):
@@ -81,3 +84,11 @@ async def client(api: ApiMock) -> AsyncGenerator[httpx.AsyncClient]:
         transport=transport, base_url="https://api.example.test"
     ) as http_client:
         yield http_client
+
+
+@pytest.fixture
+async def session_maker(mariadb_engine):
+    async with mariadb_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+    yield async_sessionmaker(bind=mariadb_engine, expire_on_commit=False)

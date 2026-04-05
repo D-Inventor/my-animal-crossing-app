@@ -3,9 +3,8 @@ from datetime import datetime, timezone
 
 import pytest
 from faker import Faker
-from sqlalchemy import NullPool, make_url, select
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from testcontainers.mysql import MySqlContainer
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from import_worker.db.snapshot import (
     Base,
@@ -27,27 +26,8 @@ from messaging.imports.events import (
 )
 
 
-@pytest.fixture(scope="session")
-async def mariadb_engine():
-    with MySqlContainer("mariadb:12.2") as mysql:
-        connection_url = make_url(mysql.get_connection_url()).set(
-            drivername="mysql+aiomysql"
-        )
-        engine = create_async_engine(connection_url, poolclass=NullPool, echo=False)
-        yield engine
-        await engine.dispose()
-
-
 def clock():
     return UtcDatetime(datetime=datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc))
-
-
-@pytest.fixture
-async def session_maker(mariadb_engine):
-    async with mariadb_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
-    yield async_sessionmaker(bind=mariadb_engine, expire_on_commit=False)
 
 
 def generate_villager(faker: Faker) -> VillagersResponseItem:

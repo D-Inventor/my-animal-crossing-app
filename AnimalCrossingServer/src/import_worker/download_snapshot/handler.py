@@ -1,10 +1,10 @@
 import logging
 import zlib
-from typing import Callable
+from typing import Any, Awaitable, Callable
 from uuid import UUID
 
 from pydantic_core import to_json
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from import_worker.db.snapshot import (
     UtcDatetime,
@@ -12,7 +12,9 @@ from import_worker.db.snapshot import (
     VillagerSnapshotVillager,
     VillagerSpecies,
 )
+from import_worker.dependencies import create_session
 from import_worker.download_snapshot.client import (
+    NookipediaClient,
     VillagersAPIProtocol,
     VillagersRequest,
     VillagersResponseItemData,
@@ -24,6 +26,23 @@ from messaging.imports.events import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def create_download_snapshot_handler(
+    session_maker: async_sessionmaker[AsyncSession], nookipedia_client: NookipediaClient
+) -> Callable[
+    ...,
+    Awaitable[
+        Any, Any, VillagerSnapshotDownloadedEvent | VillagerSnapshotDownloadFailedEvent
+    ],
+]:
+    async def handle_wrapper(
+        message: DownloadVillagerSnapshotCommand,
+    ) -> VillagerSnapshotDownloadedEvent | VillagerSnapshotDownloadFailedEvent:
+        async with create_session(session_maker) as session:
+            return await handle(message, UtcDatetime.now, session, nookipedia_client)
+
+    return handle_wrapper
 
 
 async def handle(

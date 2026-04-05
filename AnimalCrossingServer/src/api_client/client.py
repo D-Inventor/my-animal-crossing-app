@@ -14,7 +14,7 @@ class VillagerApiClient:
     async def save(self, id: str, data: SaveVillagerRequest) -> None:
         url_template = t"/villagers/{id}"
         url = url_encode(url_template)
-        response = await self._client.post(url, data=data.model_dump_json())
+        response = await self._client.post(url, content=data.model_dump_json())
         if not response.is_success:
             raise ValueError("Response indicated failure")
 

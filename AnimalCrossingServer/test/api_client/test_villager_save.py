@@ -1,6 +1,6 @@
 import pytest
 
-from api_client.client import VillagerApiClient
+from api_client import VillagerApiClient
 from api_contract.villagers.save import SaveVillagerRequest
 from test.api_mock import ApiMock, HttpMethod
 

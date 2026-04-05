@@ -4,10 +4,8 @@ from datetime import datetime, timezone
 import pytest
 from faker import Faker
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from import_worker.db.snapshot import (
-    Base,
     UtcDatetime,
     VillagerSnapshot,
     VillagerSnapshotVillager,

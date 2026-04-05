@@ -20,6 +20,7 @@ COPY --chown=appuser:appgroup pyproject.toml pyproject.toml
 RUN pip install --no-cache-dir -e .
 
 COPY --chown=appuser:appgroup src/api src/api
+COPY --chown=appuser:appgroup src/api_contract src/api_contract
 COPY --chown=appuser:appgroup src/messaging src/messaging
 COPY --chown=appuser:appgroup src/db src/db
 

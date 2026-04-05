@@ -1,17 +1,13 @@
 from typing import Annotated
 
 from fastapi import Depends
-from pydantic import BaseModel
 
 from api.db.unit_of_work import UnitOfWork, get_unit_of_work
 from api.db.villager import Villager
 from api.villagers.repository import VillagerRepository, get_repository
+from api_contract.villagers.save import SaveVillagerRequest
 
 from .router import router
-
-
-class SaveVillagerRequest(BaseModel):
-    name: str
 
 
 @router.put("/{villager_id}", summary="Save a villager with the given id")

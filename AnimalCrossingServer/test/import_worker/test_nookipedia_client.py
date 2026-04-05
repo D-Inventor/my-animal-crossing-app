@@ -2,8 +2,7 @@ import httpx
 import pytest
 
 from import_worker.download_snapshot.client import NookipediaClient, VillagersRequest
-
-from .conftest import ApiMock, HttpMethod
+from test.api_mock import ApiMock, HttpMethod
 
 default_json_response = {
     "cargoquery": [

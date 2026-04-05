@@ -19,3 +19,9 @@ class DownloadVillagerSnapshotCommand(BaseModel):
 class CreateDiffWithActiveSnapshotCommand(BaseModel):
     saga_id: uuid.UUID
     snapshot_id: uuid.UUID
+
+
+@message(MessageTopic.IMPORT_COMMANDS)
+class MigrateActiveVillagerSetCommand(BaseModel):
+    saga_id: uuid.UUID
+    snapshot_id: uuid.UUID

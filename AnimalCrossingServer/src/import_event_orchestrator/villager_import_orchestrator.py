@@ -8,6 +8,7 @@ from messaging.imports.commands import (
     CreateDiffWithActiveSnapshotCommand,
     DownloadVillagerSnapshotCommand,
     ImportVillagersCommand,
+    MigrateActiveVillagerSetCommand,
 )
 from messaging.imports.events import (
     DiffCreatedEvent,
@@ -44,7 +45,7 @@ class VillagerImportOrchestrator:
             case VillagerSnapshotDownloadFailedEvent() as event:
                 self._handle_villager_snapshot_download_failed_event(event, saga)
             case DiffCreatedEvent() as event:
-                self._handle_diff_created_event(event, saga)
+                self._handle_diff_created_event(event, context, saga)
             case _:
                 log_message_unfamiliar(saga.id, type(message).__name__)
 
@@ -54,7 +55,7 @@ class VillagerImportOrchestrator:
         saga = SagaState.create(id=command.id)
         await self.saga_repository.add(saga)
         context.publish(DownloadVillagerSnapshotCommand(saga_id=saga.id))
-        log_start_import(command)
+        log_start_import(saga.id)
 
     def _handle_villager_snapshot_downloaded_event(
         self,
@@ -68,19 +69,28 @@ class VillagerImportOrchestrator:
                 saga_id=saga.id, snapshot_id=event.snapshot_id
             )
         )
-        log_download_event(event)
+        log_download_event(saga.id)
 
     def _handle_villager_snapshot_download_failed_event(
         self, event: VillagerSnapshotDownloadFailedEvent, saga: SagaState
     ) -> None:
         saga.state = SagaStatus.FAILED
-        log_download_failed_event(event.saga_id)
+        log_download_failed_event(saga.id)
 
     def _handle_diff_created_event(
-        self, event: DiffCreatedEvent, saga: SagaState
+        self, event: DiffCreatedEvent, context: MessageContext, saga: SagaState
     ) -> None:
-        finish_diff(saga)
-        log_saga_completed(saga.id)
+        if event.differences_found:
+            finish_diff(saga, event.diff_id)
+            context.publish(
+                MigrateActiveVillagerSetCommand(
+                    saga_id=saga.id, snapshot_id=get_snapshot_id(saga)
+                )
+            )
+            log_diff_event(saga.id)
+        else:
+            finish_saga_on_diff(saga)
+            log_saga_completed(saga.id)
 
 
 def finish_download(saga: SagaState, snapshot_id: uuid.UUID) -> None:
@@ -88,8 +98,13 @@ def finish_download(saga: SagaState, snapshot_id: uuid.UUID) -> None:
     saga.completed_steps.append("download_snapshot")
 
 
-def finish_diff(saga: SagaState) -> None:
+def finish_saga_on_diff(saga: SagaState) -> None:
     saga.state = SagaStatus.COMPLETED
+    saga.completed_steps.append("create_diff")
+
+
+def finish_diff(saga: SagaState, diff_id: uuid.UUID) -> None:
+    saga.data["diff_id"] = diff_id
     saga.completed_steps.append("create_diff")
 
 
@@ -99,6 +114,13 @@ def get_saga_id(message: object) -> uuid.UUID | None:
         if hasattr(message, "saga_id") and isinstance(message.saga_id, uuid.UUID)
         else None
     )
+
+
+def get_snapshot_id(saga: SagaState) -> uuid.UUID:
+    if "snapshot_id" in saga.data and isinstance(saga.data["snapshot_id"], uuid.UUID):
+        return saga.data["snapshot_id"]
+    else:
+        raise ValueError("Unable to read snapshot id from saga")
 
 
 def log_no_saga_id() -> None:
@@ -119,6 +141,10 @@ def log_download_event(saga_id: uuid.UUID) -> None:
 
 def log_download_failed_event(saga_id: uuid.UUID) -> None:
     logger.debug("snapshot download failed for saga %s", saga_id)
+
+
+def log_diff_event(saga_id: uuid.UUID) -> None:
+    logger.debug("diff created for saga %s", saga_id)
 
 
 def log_saga_completed(saga_id: uuid.UUID) -> None:

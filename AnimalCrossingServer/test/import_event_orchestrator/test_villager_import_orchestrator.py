@@ -13,6 +13,7 @@ from messaging.imports.commands import (
     CreateDiffWithActiveSnapshotCommand,
     DownloadVillagerSnapshotCommand,
     ImportVillagersCommand,
+    MigrateActiveVillagerSetCommand,
 )
 from messaging.imports.events import (
     DiffCreatedEvent,
@@ -157,7 +158,7 @@ async def test_should_handle_missing_saga_gracefully_on_failed_download() -> Non
 
 
 @pytest.mark.asyncio
-async def test_should_complete_saga_when_diff_is_created() -> None:
+async def test_should_complete_saga_when_diff_detects_no_changes() -> None:
     # given
     saga_repository, orchestrator = create_orchestrator()
     saga = SagaState.create()
@@ -166,7 +167,7 @@ async def test_should_complete_saga_when_diff_is_created() -> None:
 
     # when
     await orchestrator.handle(
-        DiffCreatedEvent(saga_id=saga.id, diff_id=uuid4(), differences_found=True),
+        DiffCreatedEvent(saga_id=saga.id, diff_id=uuid4(), differences_found=False),
         MessageContext(),
     )
 
@@ -177,3 +178,28 @@ async def test_should_complete_saga_when_diff_is_created() -> None:
         "download_snapshot",
         "create_diff",
     ]
+
+
+@pytest.mark.asyncio
+async def test_should_send_modify_command_when_diff_detects_changes() -> None:
+    # given
+    saga_repository, orchestrator = create_orchestrator()
+    saga = SagaState.create()
+    finish_download(saga, snapshot_id=uuid4())
+    saga_repository.added_saga = saga
+    context = MessageContext()
+
+    # when
+    await orchestrator.handle(
+        DiffCreatedEvent(saga_id=saga.id, diff_id=uuid4(), differences_found=True),
+        context,
+    )
+
+    # then
+    assert saga_repository.added_saga is not None
+    assert saga_repository.added_saga.state == SagaStatus.STARTED
+    assert saga_repository.added_saga.completed_steps == [
+        "download_snapshot",
+        "create_diff",
+    ]
+    assert isinstance(context.published_messages()[0], MigrateActiveVillagerSetCommand)
